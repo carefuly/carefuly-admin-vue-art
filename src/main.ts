@@ -58,9 +58,9 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 }
 
 // 注册路由
-initStore(app);
-// 注册pinia
 initRouter(app);
+// 注册pinia
+initStore(app);
 // 注册全局自定义指令
 setupGlobDirectives(app);
 

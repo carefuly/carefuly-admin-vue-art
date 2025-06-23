@@ -52,7 +52,7 @@ const dataList = reactive([
           :endVal="item.num"
           :duration="1000"
           separator=""
-        ></CountTo>
+        />
         <div class="change-box">
           <span class="change-text">较上周</span>
           <span

@@ -208,7 +208,7 @@ const filterMenuByRoles = (menu: AppRouteRecord[], roles: string[]): AppRouteRec
     const hasPermission = !itemRoles || itemRoles.some((role) => roles?.includes(role))
 
     if (hasPermission) {
-      const filteredItem = { ...item }
+      const filteredItem = {...item}
       if (filteredItem.children?.length) {
         filteredItem.children = filterMenuByRoles(filteredItem.children, roles)
       }

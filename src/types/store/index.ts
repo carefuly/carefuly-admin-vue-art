@@ -7,13 +7,18 @@ import {LocationQueryRaw} from 'vue-router'
 
 // 用户信息
 export interface UserInfo {
-  userId: number
-  userName: string
-  roles: string[]
-  buttons: string[]
-  avatar?: string
+  id: string
+  username: string
+  userType: number
+  name: string
+  gender: number
   email?: string
-  phone?: string
+  mobile?: string
+  avatar?: string
+  dept?: object
+  dept_id?: string
+  post_ids?: string[]
+  role_ids?: string[]
 }
 
 // 系统主题样式（light | dark）

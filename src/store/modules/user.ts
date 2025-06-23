@@ -61,17 +61,17 @@ export const useUserStore = defineStore(
     }
 
     const logOut = async () => {
-      info.value = {};
-      isLogin.value = false;
-      isLock.value = false;
-      lockPassword.value = '';
-      accessToken.value = '';
-      refreshToken.value = '';
-      useWorktabStore().opened = [];
-      sessionStorage.removeItem('iframeRoutes');
-      resetRouterState(router);
-      await AuthService.logout();
-      await router.replace(RoutesAlias.Login);
+      // info.value = {};
+      // isLogin.value = false;
+      // isLock.value = false;
+      // lockPassword.value = '';
+      // accessToken.value = '';
+      // refreshToken.value = '';
+      // useWorktabStore().opened = [];
+      // sessionStorage.removeItem('iframeRoutes');
+      // resetRouterState(router);
+      // await AuthService.logout();
+      // await router.replace(RoutesAlias.Login);
     }
 
     return {

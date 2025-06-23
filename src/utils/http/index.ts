@@ -7,7 +7,8 @@ import {useWorktabStore} from '@/store/modules/worktab';
 import {resetRouterState} from '@/router/guards/beforeEach';
 import EmojiText from '@/utils/ui/emojo';
 import {ElMessage} from 'element-plus';
-import {skyMsgError} from "@/utils/toast";
+import {ApiStatus} from "@/utils/http/status";
+import {skyMsgError, skyNoticeError} from "@/utils/toast";
 import {AuthService} from "@/api/careful-ui/auth";
 import {RoutesAlias} from "@/router/routesAlias";
 
@@ -56,41 +57,23 @@ axiosInstance.interceptors.request.use(
     // 2. 请求结束
     NProgress.done();
     error.data = {};
-    error.data.msg = `服务器异常，请联系管理员🌻【${EmojiText[500]}】`;
-    return Promise.reject(error) // 返回拒绝的 Promise
+    error.data.msg = `服务器异常，请联系管理员🌻`;
+    return error || Promise.reject(error); // 返回拒绝的 Promise
   }
 );
 
 // 响应拦截器
 axiosInstance.interceptors.response.use(
-  (response: any) => {
-    const status = response.status || (response.data.status || response.data.code); // 后端返回数据状态
-    if (status === 200) {
-      if (response.data.code === 200) {
-        return response;
-      } else if (response.data.code === 401) {
-        const userStore = useUserStore();
-        const workTabStore = useWorktabStore();
-        userStore.setUserInfo({});
-        userStore.setLoginStatus(false);
-        userStore.setLockStatus(false);
-        userStore.setLockPassword("");
-        userStore.setToken("", "");
-        workTabStore.opened = [];
-        sessionStorage.removeItem('iframeRoutes');
-        resetRouterState(router);
-        router.replace(RoutesAlias.Login);
-        skyMsgError(`登录已过期，请重新登录🌻`);
-        return Promise.reject(response);
-      } else if ([400, 403, 500].includes(response.data.code)) {
-        skyMsgError(response.data.msg || "服务器偷偷跑到火星去玩了🌻");
-        return Promise.reject(response.data.msg || "服务器偷偷跑到火星去玩了🌻");
-      } else if (response.data) {
-        return response;
-      }
+  (response: AxiosResponse) => {
+    const status = response.data.status || response.data.code; // 后端返回数据状态
+    if (status === ApiStatus.success) {
+      return response;
+    } else if (status == ApiStatus.unauthorized) {
+      logOut();
+      return Promise.reject(response);
     } else {
-      skyMsgError(response?.data?.data?.msg + "🌻" || "服务器偷偷跑到火星去玩了🌻");
-      return Promise.reject(response?.data?.data?.msg + "🌻" || "服务器偷偷跑到火星去玩了🌻");
+      skyMsgError(response?.data?.msg + "🌻" || "服务器偷偷跑到火星去玩了🌻");
+      return Promise.reject(response?.data?.msg + "🌻" || "服务器偷偷跑到火星去玩了🌻");
     }
   },
   (error) => {
@@ -261,8 +244,12 @@ const api = {
 
 // 退出登录
 const logOut = () => {
-  ElMessage.error(`登录已过期，请重新登录 ${EmojiText[500]}`)
-  useUserStore().logOut();
+  skyNoticeError(`登录已过期，请重新登录🌻`);
+  const userStore = useUserStore();
+  userStore.setUserInfo({});
+  userStore.setLoginStatus(false);
+  userStore.setToken("", "");
+  router.replace(RoutesAlias.Login);
 }
 
 export default api;

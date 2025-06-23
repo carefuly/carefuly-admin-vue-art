@@ -8,28 +8,13 @@ import {checkStorageCompatibility} from './utils/storage';
 import {AuthService} from "@/api/careful-ui/auth";
 import {skyMsgWarning} from "@/utils/toast";
 
-const userStore = useUserStore()
-const {language} = storeToRefs(userStore)
+const userStore = useUserStore();
+const {language} = storeToRefs(userStore);
 
 const locales = {
   zh: zh,
   en: en
 }
-
-onBeforeMount(() => {
-  setThemeTransitionClass(true)
-})
-
-onMounted(() => {
-  // 检查存储兼容性
-  checkStorageCompatibility()
-  // 提升暗黑主题下页面刷新视觉体验
-  setThemeTransitionClass(false)
-  // 系统升级
-  systemUpgrade()
-  // 获取用户信息
-  getUserInfo()
-})
 
 // 获取用户信息
 const getUserInfo = async () => {
@@ -38,10 +23,25 @@ const getUserInfo = async () => {
       const res = await AuthService.userinfo();
       userStore.setUserInfo(res.data);
     } catch (error) {
-      skyMsgWarning("获取用户信息失败，请刷新重试🌻");
+      skyMsgWarning(`获取用户信息失败，请刷新重试🌻${error}`);
     }
   }
 }
+
+onBeforeMount(() => {
+  setThemeTransitionClass(true);
+});
+
+onMounted(() => {
+  // 检查存储兼容性
+  checkStorageCompatibility();
+  // 提升暗黑主题下页面刷新视觉体验
+  setThemeTransitionClass(false);
+  // 系统升级
+  systemUpgrade();
+  // 获取用户信息
+  getUserInfo();
+});
 </script>
 
 <template>

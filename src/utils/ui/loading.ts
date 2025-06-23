@@ -1,5 +1,5 @@
-import { fourDotsSpinnerSvg } from '@/assets/svg/loading'
-import { ElLoading } from 'element-plus'
+import {fourDotsSpinnerSvg} from '@/assets/svg/loading'
+import {ElLoading} from 'element-plus'
 
 const DEFAULT_LOADING_CONFIG = {
   lock: true,

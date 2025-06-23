@@ -1,4 +1,4 @@
-// import {useSettingStore} from '@/store/modules/setting'
+import {useSettingStore} from '@/store/modules/setting'
 import {ElMessage} from 'element-plus'
 
 /**
@@ -221,7 +221,7 @@ export function setElementThemeColor(color: string): void {
   const elStyle = document.documentElement.style
 
   elStyle.setProperty('--el-color-primary', color)
-  // handleElementThemeColor(color, useSettingStore().isDark)
+  handleElementThemeColor(color, useSettingStore().isDark)
 
   // 生成更淡一点的颜色
   for (let i = 1; i < 16; i++) {

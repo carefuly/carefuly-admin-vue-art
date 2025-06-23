@@ -4,13 +4,15 @@
 export enum RoutesAlias {
   Home = '/careful-ui/index/index', // 布局容器
 
+  Login = '/auth/login', // 登录
+  Register = '/auth/register', // 注册
+  ForgetPassword = '/auth/forget-password', // 忘记密码
+
   Dashboard = '/careful-ui/dashboard/console', // 工作台
   Analysis = '/careful-ui/dashboard/analysis', // 分析页
   Ecommerce = '/careful-ui/dashboard/ecommerce', // 电子商务
 
-  Login = '/auth/login', // 登录
-  Register = '/auth/register', // 注册
-  ForgetPassword = '/auth/forget-password', // 忘记密码
+
 
   Exception403 = '/exception/403', // 403
   Exception404 = '/exception/404', // 404

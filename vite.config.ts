@@ -68,24 +68,25 @@ export default ({command, mode}) => {
       port: parseInt(VITE_PORT), // 端口号
       hmr: true, // 热更新
       open: false, // 服务启动时是否自动打开浏览器
-      // proxy: {
-      //   // 代理跨域
-      //   [env.VITE_GLOB_API_URL_PREFIX]: {
-      //     // 配置哪个环境下的
-      //     target: env.VITE_GLOB_API_URL,
-      //     // 允许跨域
-      //     changeOrigin: true,
-      //     // 支持https
-      //     secure: false,
-      //     // 路径重写，例如：将路径中包含dev-api字段替换为空。注意：只有请求真实后端接口才会有用，使用mock接口还是得带koi
-      //     rewrite: path => path.replace(new RegExp("^" + env.VITE_GLOB_API_URL_PREFIX), ""),
-      //   }
-      // }
+      proxy: {
+        // 代理跨域
+        [env.VITE_GLOB_API_URL_PREFIX]: {
+          // 配置哪个环境下的
+          target: env.VITE_GLOB_API_URL,
+          // 允许跨域
+          changeOrigin: true,
+          // 支持https
+          secure: false,
+          // 路径重写，例如：将路径中包含dev-api字段替换为空。注意：只有请求真实后端接口才会有用，使用mock接口还是得带koi
+          rewrite: path => path.replace(new RegExp("^" + env.VITE_GLOB_API_URL_PREFIX), ""),
+        }
+      }
     },
     // 插件
     plugins: createVitePlugins(env, command === 'build'),
     // 构建
     build: {
+      target: 'es2015',
       chunkSizeWarningLimit: 2000, // 消除打包大小超过500kb警告
       outDir: 'dist', // 指定打包路径，默认为项目根目录下的dist目录
       minify: 'terser', // Vite 2.6.x 以上需要配置 minify："terser"，terserOptions才能生效
@@ -104,8 +105,16 @@ export default ({command, mode}) => {
         output: {
           chunkFileNames: 'static/js/[name]-[hash].js',
           entryFileNames: 'static/js/[name]-[hash].js',
-          assetFileNames: 'static/[ext]/[name]-[hash].[ext]'
-        }
+          assetFileNames: 'static/[ext]/[name]-[hash].[ext]',
+          manualChunks: {
+            vendor: ['vue', 'vue-router', 'pinia', 'element-plus']
+          }
+        },
+      },
+      dynamicImportVarsOptions: {
+        warnOnError: true,
+        exclude: [],
+        include: ['src/views/**/*.vue']
       }
     },
     // 预加载项目必需的组件
