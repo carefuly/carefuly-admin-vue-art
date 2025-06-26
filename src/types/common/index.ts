@@ -27,7 +27,7 @@ export type KeyValue<T = any> = {
 // 选项类型
 export interface Option {
   label: string
-  value: string | number
+  value: string | number | boolean
   disabled?: boolean
   children?: Option[]
 }
