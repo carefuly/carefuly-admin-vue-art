@@ -3,7 +3,7 @@ import ArtButtonTable from "@/components/core/forms/ArtButtonTable.vue";
 import {SearchChangeParams, SearchFormItem} from '@/types';
 import {DictService} from "@/api/careful-ui/tools/dict";
 import {useCheckedColumns} from "@/composables/useCheckedColumns";
-import {skyMsgBox, skyMsgError, skyMsgInfo, skyMsgWarning, skyNoticeError, skyNoticeSuccess} from "@/utils/toast";
+import {skyMsgBox, skyMsgSuccess, skyMsgError, skyMsgInfo, skyMsgWarning, skyNoticeError, skyNoticeSuccess} from "@/utils/toast";
 
 // 定义表单搜索初始值
 const initialSearchState = {
@@ -14,6 +14,7 @@ const initialSearchState = {
   status: true,
 };
 const formRef = ref();
+const skyExcelRef = ref();
 const pageData = reactive({
   pagination: {
     page: 1,
@@ -111,7 +112,7 @@ const method = reactive({
     }
   },
   /** 删除 */
-  handleDelete: (row: any) => {
+  handleDelete(row: any) {
     const id = row.id;
     if (id === null || id === "") {
       skyMsgWarning("请选中需要删除的数据🌻");
@@ -133,7 +134,7 @@ const method = reactive({
       });
   },
   /** 批量删除 */
-  handleBatchDelete: () => {
+  handleBatchDelete() {
     if (pageData.ids.length == 0) {
       skyMsgInfo("请选择需要删除的数据🌻");
       return;
@@ -154,7 +155,7 @@ const method = reactive({
       });
   },
   /** 回显数据 */
-  handleEcho: async (id: any) => {
+  async handleEcho(id: any) {
     if (id === null || id === "") {
       skyMsgWarning("请选择需要修改的数据🌻");
       return;
@@ -196,20 +197,46 @@ const method = reactive({
     })
   },
   /** 导入 */
-  handleImportExcel: () => {
-    // let params = {
-    //   title: "导入数据",
-    //   isApi: true, // 是否后台上传
-    //   importApi: "/sky/tools/dict/import"
-    // };
-    // skyExcelRef.value.excelParams(params);
+  handleImportExcel() {
+    let params = {
+      title: "导入数据",
+      isApi: true, // 是否后台上传
+      importFun: DictService.import,
+    };
+    skyExcelRef.value.excelParams(params);
+  },
+  /** 导入 */
+  handleConfirmUpload() {
+    method.handleListPage();
+  },
+  /** 下载模板 */
+  handleTemplateExcel() {
+    window.location.href = import.meta.env.VITE_GLOB_API_URL + "/static/templates/import/导入模板.xlsx";
+    skyMsgSuccess("模板下载成功🌻");
   },
   /** 导出 */
-  handleDownload: async () => {
+  async handleDownload() {
+    const res: any = await DictService.export(pageData.formFilters);
+    // 创建下载链接
+    const url = window.URL.createObjectURL(
+      new Blob([res],
+        {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})
+    );
+    // 创建下载链接
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `数据字典导出_${new Date().toLocaleString()}.xlsx`);
+    document.body.appendChild(link);
+    // 触发下载
+    link.click();
+    // 清理
+    window.URL.revokeObjectURL(url);
+    link.remove();
 
+    skyMsgSuccess("导出成功🌻");
   },
   /** 是否多选 */
-  handleSelectionChange: (selection: any) => {
+  handleSelectionChange(selection: any) {
     pageData.ids = selection.map((item: any) => item.id);
   },
   /** 获取信息 */
@@ -230,12 +257,12 @@ const method = reactive({
     }
   },
   /** 页数 */
-  handleSizeChange: (newPageSize: number) => {
+  handleSizeChange(newPageSize: number) {
     pageData.pagination.pageSize = newPageSize;
     method.handleListPage();
   },
   /** 分页 */
-  handlePageChange: (newPage: number) => {
+  handlePageChange(newPage: number) {
     pageData.pagination.page = newPage;
     method.handleListPage();
   },
@@ -429,6 +456,13 @@ onMounted(() => {
         </el-dialog>
       </el-card>
     </div>
+
+    <!-- excel导入 -->
+    <ArtExcel
+      ref="skyExcelRef"
+      @handleTemplateExcel="method.handleTemplateExcel"
+      @handleConfirmUpload="method.handleConfirmUpload"
+    />
   </ArtTableFullScreen>
 </template>
 

@@ -5,6 +5,7 @@ import {BaseResponse} from '@/types/api';
 // 统一管理接口
 enum API {
   CREATE = "/v1/tools/dict/create",
+  IMPORT = "/v1/tools/dict/import",
   EXPORT = "/v1/tools/dict/export",
   DELETE = "/v1/tools/dict/delete/",
   BATCH_DELETE = "/v1/tools/dict/delete/batchDelete",
@@ -23,7 +24,16 @@ export class DictService {
     });
   }
 
-  // 导出
+  // 导入
+  static async import(data: any) {
+    return await request.post<BaseResponse>({
+      url: API.IMPORT,
+      data,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  }
 
   // 删除
   static async delete(id: string) {
@@ -68,6 +78,15 @@ export class DictService {
     return await request.get<BaseResponse>({
       url: API.LIST_ALL,
       params
+    });
+  }
+
+  // 导出
+  static async export(params: any) {
+    return await request.get({
+      url: API.EXPORT,
+      params,
+      responseType: "blob",
     });
   }
 }

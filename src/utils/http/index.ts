@@ -71,6 +71,8 @@ axiosInstance.interceptors.response.use(
     } else if (status == ApiStatus.unauthorized) {
       logOut();
       return Promise.reject(response);
+    } else if (response.status == ApiStatus.success) {
+      return response;
     } else {
       skyMsgError(response?.data?.msg + "🌻" || "服务器偷偷跑到火星去玩了🌻");
       return Promise.reject(response?.data?.msg + "🌻" || "服务器偷偷跑到火星去玩了🌻");
