@@ -23,7 +23,7 @@ const getUserInfo = async () => {
       const res = await AuthService.userinfo();
       userStore.setUserInfo(res.data);
     } catch (error) {
-      skyMsgWarning(`获取用户信息失败，请刷新重试🌻${error}`);
+      skyMsgWarning(`获取用户信息失败，请刷新重试🌻【${error}】`);
     }
   }
 }
@@ -40,7 +40,7 @@ onMounted(() => {
   // 系统升级
   systemUpgrade();
   // 获取用户信息
-  getUserInfo();
+  // getUserInfo();
 });
 </script>
 

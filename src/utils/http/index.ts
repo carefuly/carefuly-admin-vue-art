@@ -65,17 +65,22 @@ axiosInstance.interceptors.request.use(
 // 响应拦截器
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
-    const status = response.data.status || response.data.code; // 后端返回数据状态
-    if (status === ApiStatus.success) {
+    if (response.data.code === ApiStatus.success) {
       return response;
-    } else if (status == ApiStatus.unauthorized) {
-      logOut();
-      return Promise.reject(response);
-    } else if (response.status == ApiStatus.success) {
-      return response;
+    } else if (response.data.code === ApiStatus.unauthorized) {
+      // 401 未登录
+      skyNoticeError(`登录已过期，请重新登录🌻`);
+      const userStore = useUserStore();
+      userStore.setUserInfo({});
+      userStore.setLoginStatus(false);
+      userStore.setToken("", "");
+      router.replace(RoutesAlias.Login);
+      return Promise.reject(response.data.msg);
+    } else if ([400, 403, 500].includes(response.data.code)) {
+      skyMsgError(response.data.msg || "服务器偷偷跑到火星去玩了🌻");
+      return Promise.reject(response.data.msg || "服务器偷偷跑到火星去玩了🌻");
     } else {
-      skyMsgError(response?.data?.msg + "🌻" || "服务器偷偷跑到火星去玩了🌻");
-      return Promise.reject(response?.data?.msg + "🌻" || "服务器偷偷跑到火星去玩了🌻");
+      return response;
     }
   },
   (error) => {

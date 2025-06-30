@@ -4,18 +4,18 @@ import {BaseResponse} from '@/types/api';
 
 // 统一管理接口
 enum API {
-  CREATE = "/v1/tools/dict/create",
-  IMPORT = "/v1/tools/dict/import",
-  EXPORT = "/v1/tools/dict/export",
-  DELETE = "/v1/tools/dict/delete/",
-  BATCH_DELETE = "/v1/tools/dict/delete/batchDelete",
-  UPDATE = "/v1/tools/dict/update",
-  GET_BY_ID = "/v1/tools/dict/getById/",
-  LIST_PAGE = "/v1/tools/dict/listPage",
-  LIST_ALL = "/v1/tools/dict/listAll",
+  CREATE = "/v1/tools/dictType/create",
+  IMPORT = "/v1/tools/dictType/import",
+  EXPORT = "/v1/tools/dictType/export",
+  DELETE = "/v1/tools/dictType/delete/",
+  BATCH_DELETE = "/v1/tools/dictType/delete/batchDelete",
+  UPDATE = "/v1/tools/dictType/update",
+  GET_BY_ID = "/v1/tools/dictType/getById/",
+  LIST_PAGE = "/v1/tools/dictType/listPage",
+  LIST_ALL = "/v1/tools/dictType/listAll",
 }
 
-export class DictService {
+export class DictTypeService {
   // 新增
   static async create(data: any) {
     return await request.post<BaseResponse>({

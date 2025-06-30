@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import ArtButtonTable from "@/components/core/forms/ArtButtonTable.vue";
-import {SearchChangeParams, SearchFormItem} from '@/types';
-import {DictService} from "@/api/careful-ui/tools/dict";
 import {useCheckedColumns} from "@/composables/useCheckedColumns";
+import {SearchChangeParams, SearchFormItem} from '@/types';
 import {skyMsgBox, skyMsgSuccess, skyMsgError, skyMsgInfo, skyMsgWarning, skyNoticeError, skyNoticeSuccess} from "@/utils/toast";
+import {DictService} from "@/api/careful-ui/tools/dict";
 
 // 定义表单搜索初始值
 const initialSearchState = {
@@ -18,12 +18,12 @@ const skyExcelRef = ref();
 const pageData = reactive({
   pagination: {
     page: 1,
-    pageSize: 10,
+    pageSize: 15,
     Creator: null,
     Modifier: null,
   },
   formFilters: {...initialSearchState},
-  loading: false,
+  confirmLoading: false,
   dialogVisible: false,
   dialogType: "add",
   form: {
@@ -47,6 +47,7 @@ const pageData = reactive({
     ],
   },
   ids: [],
+  loading: false,
   columnOptions: [
     {label: '勾选', type: 'selection'},
     {label: '字典名称', prop: 'name'},
@@ -70,7 +71,7 @@ const method = reactive({
   handleSearchReset() {
     Object.assign(pageData.formFilters, {...initialSearchState});
     pageData.pagination.page = 1; // 重置到第一页
-    pageData.pagination.pageSize = 10;
+    pageData.pagination.pageSize = 15;
     method.handleListPage();
   },
   /** 搜索 */
@@ -118,7 +119,7 @@ const method = reactive({
       skyMsgWarning("请选中需要删除的数据🌻");
       return;
     }
-    skyMsgBox("您确认需要删除字典名称[" + row.name + "]么？")
+    skyMsgBox("您确认需要删除名称[" + row.name + "]么？")
       .then(async () => {
         try {
           await DictService.delete(id);
