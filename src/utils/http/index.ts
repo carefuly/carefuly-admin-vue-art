@@ -64,17 +64,14 @@ axiosInstance.interceptors.request.use(
 
 // 响应拦截器
 axiosInstance.interceptors.response.use(
-  (response: AxiosResponse) => {
+  async (response: AxiosResponse) => {
     if (response.data.code === ApiStatus.success) {
       return response;
     } else if (response.data.code === ApiStatus.unauthorized) {
       // 401 未登录
       skyNoticeError(`登录已过期，请重新登录🌻`);
       const userStore = useUserStore();
-      userStore.setUserInfo({});
-      userStore.setLoginStatus(false);
-      userStore.setToken("", "");
-      router.replace(RoutesAlias.Login);
+      await userStore.logOut();
       return Promise.reject(response.data.msg);
     } else if ([400, 403, 500].includes(response.data.code)) {
       skyMsgError(response.data.msg || "服务器偷偷跑到火星去玩了🌻");

@@ -74,9 +74,10 @@ export class DictTypeService {
   }
 
   // 列表查询
-  static async listAll() {
+  static async listAll(params: any) {
     return await request.get<BaseResponse>({
       url: API.LIST_ALL,
+      params
     });
   }
 

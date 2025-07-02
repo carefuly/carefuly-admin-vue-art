@@ -163,8 +163,13 @@ async function processBackendMenu(router: Router): Promise<void> {
  */
 async function getMenuList() {
   try {
-    const res = await MenuService.listTree();
-    const menuData = res.data;
+    let menuData = [];
+    if (useUserStore().isLogin) {
+      const res = await MenuService.listTree({status: true});
+      menuData = res.data;
+    } else {
+      menuData = [];
+    }
     // 处理菜单数据
     const menuList = menuData.map((route: any) => menuDataToRouter(route));
     return {menuList};
@@ -183,7 +188,7 @@ async function registerAndStoreMenu(router: Router, menuList: AppRouteRecord[], 
   }
 
   const menuStore = useMenuStore();
-  menuStore.setMenuList(menuList);
+  menuStore.setMenuList(filterHiddenMenus(menuList));
   registerDynamicRoutes(router, menuList);
   isRouteRegistered.value = true;
   useWorktabStore().validateWorktabs(router);
@@ -220,6 +225,31 @@ const filterMenuByRoles = (menu: AppRouteRecord[], roles: string[]): AppRouteRec
 }
 
 /**
+ * 过滤隐藏的菜单项（递归函数）
+ * @param menus 原始菜单数组
+ * @returns 过滤后的菜单数组
+ */
+function filterHiddenMenus(menus: AppRouteRecord[]): AppRouteRecord[] {
+  return menus
+    .filter(menu => !menu.meta.isHide) // 首先过滤掉当前层级隐藏的项
+    .map(menu => {
+      // 如果有子菜单，递归处理子菜单
+      if (menu.children && menu.children.length) {
+        const filteredChildren = filterHiddenMenus(menu.children);
+
+        // 如果子菜单都被过滤掉，并且不保留空节点，则移除children属性
+        // 注意：这里创建新的菜单项对象，避免修改原始数据
+        return {
+          ...menu,
+          children: filteredChildren.length > 0 ? filteredChildren : []
+        };
+      }
+      // 没有子菜单直接返回
+      return menu;
+    });
+}
+
+/**
  * 验证菜单列表是否有效
  */
 function isValidMenuList(menuList: AppRouteRecord[]): boolean {
@@ -230,15 +260,15 @@ function isValidMenuList(menuList: AppRouteRecord[]): boolean {
  * 重置路由相关状态
  */
 export function resetRouterState(router: Router): void {
-  // isRouteRegistered.value = false
-  // // 清理动态注册的路由
-  // router.getRoutes().forEach((route) => {
-  //   if (route.meta?.dynamic) {
-  //     router.removeRoute(route.name as string)
-  //   }
-  // })
-  // // 清空菜单数据
-  // const menuStore = useMenuStore()
-  // menuStore.setMenuList([])
+  isRouteRegistered.value = false
+  // 清理动态注册的路由
+  router.getRoutes().forEach((route) => {
+    if (route.meta?.dynamic) {
+      router.removeRoute(route.name as string)
+    }
+  })
+  // 清空菜单数据
+  const menuStore = useMenuStore()
+  menuStore.setMenuList([])
 }
 

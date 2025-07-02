@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import ArtButtonTable from "@/components/core/forms/ArtButtonTable.vue";
 import {useCheckedColumns} from "@/composables/useCheckedColumns";
+import {useDictAll} from "@/hooks/dict";
 import {useScreenStore} from "@/hooks/screen";
 import {SearchChangeParams, SearchFormItem} from '@/types';
 import {skyMsgBox, skyMsgSuccess, skyMsgError, skyMsgInfo, skyMsgWarning, skyNoticeError, skyNoticeSuccess} from "@/utils/toast";
 import {DictService} from "@/api/careful-ui/tools/dict";
 import {DictTypeService} from "@/api/careful-ui/tools/dict_type";
 
+const {artDict} = useDictAll(["标签类型", "数据类型", "状态"]);
 const {isMobile} = useScreenStore();
 
 // 定义表单搜索初始值
@@ -18,7 +20,7 @@ const initialSearchState = {
   dict_id: "",
   status: true,
 };
-const tabs = ref("form");
+const tabs = ref("表单");
 const formRef = ref();
 const skyExcelRef = ref();
 const pageData = reactive({
@@ -121,7 +123,7 @@ const method = reactive({
   },
   /** 显示对话 */
   showDialog(type: string, row?: any) {
-    tabs.value = "form";
+    tabs.value = "表单";
     pageData.dialogType = type;
     pageData.dialogVisible = true;
 
@@ -172,7 +174,7 @@ const method = reactive({
           await DictTypeService.delete(id);
           skyNoticeSuccess("删除成功🌻");
         } catch (error) {
-          skyNoticeError("删除失败，请刷新重试🌻");
+          skyNoticeError(`删除失败，请刷新重试🌻【${error}】`);
         } finally {
           await method.handleListPage();
         }
@@ -193,7 +195,7 @@ const method = reactive({
           await DictTypeService.batchDelete(pageData.ids);
           skyNoticeSuccess(`批量删除成功🌻`);
         } catch (error) {
-          skyNoticeSuccess("批量删除失败，请刷新重试🌻");
+          skyNoticeSuccess(`批量删除失败，请刷新重试🌻【${error}】`);
         } finally {
           await method.handleListPage();
         }
@@ -275,7 +277,6 @@ const method = reactive({
     pageData.pagination.page = newPage;
     method.handleListPage();
   },
-
 });
 // 表单配置项
 const formItems: SearchFormItem[] = [
@@ -295,13 +296,7 @@ const formItems: SearchFormItem[] = [
     config: {
       clearable: true
     },
-    options: () => [
-      {label: 'primary', value: "primary"},
-      {label: 'success', value: "success"},
-      {label: 'warning', value: "warning"},
-      {label: 'danger', value: "danger"},
-      {label: 'info', value: "info"},
-    ],
+    options: () => artDict['标签类型'],
     onChange: method.handleFormChange
   },
   {
@@ -311,11 +306,7 @@ const formItems: SearchFormItem[] = [
     config: {
       clearable: true
     },
-    options: () => [
-      {label: '字符串', value: 1},
-      {label: '整型', value: 2},
-      {label: '布尔', value: 3},
-    ],
+    options: () => artDict['数据类型'],
     onChange: method.handleFormChange
   },
   {
@@ -402,7 +393,7 @@ onMounted(() => {
     <div
       v-if="!pageData.mobile"
       :style="{width: !pageData.mobile ? '100%' : '75%'}"
-      class="dict-page" id="table-full-screen"
+      class="page" id="table-full-screen"
     >
       <el-card shadow="never" class="art-table-card">
         <el-button
@@ -463,7 +454,7 @@ onMounted(() => {
           align-center
         >
           <el-tabs type="border-card" v-model="tabs">
-            <el-tab-pane label="form" name="form">
+            <el-tab-pane label="表单" name="表单">
               <el-form ref="formRef" :model="pageData.form" :rules="pageData.rules" label-width="80px">
                 <el-form-item label="所属字典" prop="dict_id">
                   <el-select
@@ -508,11 +499,11 @@ onMounted(() => {
                 </el-form-item>
                 <el-form-item label="标签类型" prop="dictTag">
                   <el-select v-model="pageData.form.dictTag" placeholder="标签类型">
-                    <el-option label="primary" value="primary"/>
-                    <el-option label="success" value="success"/>
-                    <el-option label="warning" value="warning"/>
-                    <el-option label="danger" value="danger"/>
-                    <el-option label="info" value="info"/>
+                    <el-option
+                      v-for="item in artDict['标签类型']"
+                      :label="item['label']"
+                      :value="item['value']"
+                    />
                   </el-select>
                 </el-form-item>
                 <el-form-item label="标签颜色" prop="dictColor">
@@ -522,9 +513,12 @@ onMounted(() => {
                   <el-input-number v-model="pageData.form.sort"/>
                 </el-form-item>
                 <el-form-item label="状态" prop="status">
-                  <el-select v-model="pageData.form.status" placeholder="字典分类">
-                    <el-option label="启用" :value="true"/>
-                    <el-option label="禁用" :value="false"/>
+                  <el-select v-model="pageData.form.status" placeholder="状态">
+                    <el-option
+                      v-for="item in artDict['状态']"
+                      :label="item['label']"
+                      :value="item['value']"
+                    />
                   </el-select>
                 </el-form-item>
                 <el-form-item label="备注" prop="remark">
@@ -532,7 +526,7 @@ onMounted(() => {
                 </el-form-item>
               </el-form>
             </el-tab-pane>
-            <el-tab-pane label="json" name="json">
+            <el-tab-pane label="字段" name="字段">
               {{ pageData.form }}
             </el-tab-pane>
           </el-tabs>

@@ -69,7 +69,7 @@ const props = withDefaults(defineProps<TableProps>(), {
   currentPage: 1,
   pageSize: 20,
   hideOnSinglePage: true,
-  pageSizes: () => [10, 20, 30, 50],
+  pageSizes: () => [15, 30, 50, 100],
   paginationAlign: 'center',
   paginationSize: 'default',
   paginationLayout: '',

@@ -6,13 +6,13 @@ import {BaseResponse} from '@/types/api';
 enum API {
   CREATE = "/v1/tools/dict/create",
   IMPORT = "/v1/tools/dict/import",
-  EXPORT = "/v1/tools/dict/export",
   DELETE = "/v1/tools/dict/delete/",
   BATCH_DELETE = "/v1/tools/dict/delete/batchDelete",
   UPDATE = "/v1/tools/dict/update",
   GET_BY_ID = "/v1/tools/dict/getById/",
   LIST_PAGE = "/v1/tools/dict/listPage",
   LIST_ALL = "/v1/tools/dict/listAll",
+  EXPORT = "/v1/tools/dict/export",
 }
 
 export class DictService {

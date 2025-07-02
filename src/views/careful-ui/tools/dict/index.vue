@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import ArtButtonTable from "@/components/core/forms/ArtButtonTable.vue";
 import {useCheckedColumns} from "@/composables/useCheckedColumns";
+import {useDictAll} from "@/hooks/dict";
 import {SearchChangeParams, SearchFormItem} from '@/types';
 import {skyMsgBox, skyMsgSuccess, skyMsgError, skyMsgInfo, skyMsgWarning, skyNoticeError, skyNoticeSuccess} from "@/utils/toast";
 import {DictService} from "@/api/careful-ui/tools/dict";
+
+const {artDict} = useDictAll(["字典类型", "数据类型", "状态"]);
 
 // 定义表单搜索初始值
 const initialSearchState = {
@@ -13,6 +16,7 @@ const initialSearchState = {
   valueType: null,
   status: true,
 };
+const tabs = ref("表单");
 const formRef = ref();
 const skyExcelRef = ref();
 const pageData = reactive({
@@ -86,6 +90,7 @@ const method = reactive({
   },
   /** 显示对话 */
   showDialog(type: string, row?: any) {
+    tabs.value = "表单";
     pageData.dialogType = type;
     pageData.dialogVisible = true;
 
@@ -125,7 +130,7 @@ const method = reactive({
           await DictService.delete(id);
           skyNoticeSuccess("删除成功🌻");
         } catch (error) {
-          skyNoticeError("删除失败，请刷新重试🌻");
+          skyNoticeError(`删除失败，请刷新重试🌻【${error}】`);
         } finally {
           await method.handleListPage();
         }
@@ -146,7 +151,7 @@ const method = reactive({
           await DictService.batchDelete(pageData.ids);
           skyNoticeSuccess(`批量删除成功🌻`);
         } catch (error) {
-          skyNoticeSuccess("批量删除失败，请刷新重试🌻");
+          skyNoticeSuccess(`批量删除失败，请刷新重试🌻【${error}】`);
         } finally {
           await method.handleListPage();
         }
@@ -289,17 +294,13 @@ const formItems: SearchFormItem[] = [
     onChange: method.handleFormChange,
   },
   {
-    label: '字典分类',
+    label: '字典类型',
     prop: 'type',
     type: 'select',
     config: {
       clearable: true
     },
-    options: () => [
-      {label: '普通字典', value: 1},
-      {label: '系统字典', value: 2},
-      {label: '枚举字典', value: 3},
-    ],
+    options: () => artDict['字典类型'],
     onChange: method.handleFormChange
   },
   {
@@ -309,11 +310,7 @@ const formItems: SearchFormItem[] = [
     config: {
       clearable: true
     },
-    options: () => [
-      {label: '字符串', value: 1},
-      {label: '整型', value: 2},
-      {label: '布尔', value: 3},
-    ],
+    options: () => artDict['数据类型'],
     onChange: method.handleFormChange
   },
   {
@@ -364,7 +361,7 @@ onMounted(() => {
 
 <template>
   <ArtTableFullScreen>
-    <div class="dict-page" id="table-full-screen">
+    <div class="page" id="table-full-screen">
       <!-- 搜索栏 -->
       <ArtSearchBar
         v-model:filter="pageData.formFilters"
@@ -414,40 +411,54 @@ onMounted(() => {
           width="30%"
           align-center
         >
-          <el-form ref="formRef" :model="pageData.form" :rules="pageData.rules" label-width="80px">
-            <el-form-item label="字典名称" prop="name">
-              <el-input v-model="pageData.form.name" placeholder="字典名称" :disabled="pageData.dialogType === 'edit'"/>
-            </el-form-item>
-            <el-form-item label="字典编码" prop="code">
-              <el-input v-model="pageData.form.code" placeholder="字典编码"/>
-            </el-form-item>
-            <el-form-item label="字典分类" prop="type">
-              <el-select v-model="pageData.form.type" placeholder="字典编码" :disabled="pageData.dialogType === 'edit'">
-                <el-option label="普通字典" :value="1"/>
-                <el-option label="系统字典" :value="2"/>
-                <el-option label="枚举字典" :value="3"/>
-              </el-select>
-            </el-form-item>
-            <el-form-item label="字典分类" prop="valueType">
-              <el-select v-model="pageData.form.valueType" placeholder="字典分类" :disabled="pageData.dialogType === 'edit'">
-                <el-option label="字符串" :value="1"/>
-                <el-option label="整型" :value="2"/>
-                <el-option label="布尔" :value="3"/>
-              </el-select>
-            </el-form-item>
-            <el-form-item label="排序" prop="sort">
-              <el-input-number v-model="pageData.form.sort"/>
-            </el-form-item>
-            <el-form-item label="状态" prop="status">
-              <el-select v-model="pageData.form.status" placeholder="字典分类">
-                <el-option label="启用" :value="true"/>
-                <el-option label="禁用" :value="false"/>
-              </el-select>
-            </el-form-item>
-            <el-form-item label="备注" prop="remark">
-              <el-input type="textarea" :rows="3" v-model="pageData.form.remark" placeholder="备注"/>
-            </el-form-item>
-          </el-form>
+          <el-tabs type="border-card" v-model="tabs">
+            <el-tab-pane label="表单" name="表单">
+              <el-form ref="formRef" :model="pageData.form" :rules="pageData.rules" label-width="80px">
+                <el-form-item label="字典名称" prop="name">
+                  <el-input v-model="pageData.form.name" placeholder="字典名称" :disabled="pageData.dialogType === 'edit'"/>
+                </el-form-item>
+                <el-form-item label="字典编码" prop="code">
+                  <el-input v-model="pageData.form.code" placeholder="字典编码"/>
+                </el-form-item>
+                <el-form-item label="字典类型" prop="type">
+                  <el-select v-model="pageData.form.type" placeholder="字典类型" :disabled="pageData.dialogType === 'edit'">
+                    <el-option
+                      v-for="item in artDict['字典类型']"
+                      :label="item['label']"
+                      :value="item['value']"
+                    />
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="数据类型" prop="valueType">
+                  <el-select v-model="pageData.form.valueType" placeholder="数据类型" :disabled="pageData.dialogType === 'edit'">
+                    <el-option
+                      v-for="item in artDict['数据类型']"
+                      :label="item['label']"
+                      :value="item['value']"
+                    />
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="排序" prop="sort">
+                  <el-input-number v-model="pageData.form.sort"/>
+                </el-form-item>
+                <el-form-item label="状态" prop="status">
+                  <el-select v-model="pageData.form.status" placeholder="状态">
+                    <el-option
+                      v-for="item in artDict['状态']"
+                      :label="item['label']"
+                      :value="item['value']"
+                    />
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="备注" prop="remark">
+                  <el-input type="textarea" :rows="3" v-model="pageData.form.remark" placeholder="备注"/>
+                </el-form-item>
+              </el-form>
+            </el-tab-pane>
+            <el-tab-pane label="字段" name="字段">
+              {{ pageData.form }}
+            </el-tab-pane>
+          </el-tabs>
           <template #footer>
             <div class="dialog-footer">
               <ElButton @click="pageData.dialogVisible = false">取消</ElButton>
@@ -457,7 +468,6 @@ onMounted(() => {
         </el-dialog>
       </el-card>
     </div>
-
     <!-- excel导入 -->
     <ArtExcel
       ref="skyExcelRef"
