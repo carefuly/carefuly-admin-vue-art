@@ -7,10 +7,17 @@ import {IconTypeEnum} from "@/enums/appEnum";
 import {useDictAll} from "@/hooks/dict";
 import {SearchChangeParams, SearchFormItem} from '@/types';
 import {skyMsgBox, skyMsgSuccess, skyMsgError, skyMsgInfo, skyMsgWarning, skyNoticeError, skyNoticeSuccess} from "@/utils/toast";
+import {DictTypeService} from "@/api/careful-ui/tools/dict_type";
 import {MenuService} from "@/api/careful-ui/system/menu";
 
 const iconType = ref(IconTypeEnum.UNICODE);
-const {artDict} = useDictAll(["菜单类型", "状态"]);
+// const {artDict} = useDictAll(["菜单类型", "状态"]);
+const dictNames = ["菜单类型", "接口请求方法", "状态"];
+let artDict: any = reactive({
+  "菜单类型": [],
+  "接口请求方法": [],
+  "状态": [],
+});
 
 // 定义表单搜索初始值
 const initialSearchState = {
@@ -88,6 +95,16 @@ const pageData = reactive({
   tableList: [],
 });
 const method = reactive({
+  /** 获取指定字典项 */
+  async handleListByNames() {
+    artDict = {};
+    try {
+      const res = await DictTypeService.listByDictNames(dictNames);
+      artDict = res.data;
+    } catch (error) {
+      skyMsgError(`数据查询失败，请刷新重试🌻【${error}】`);
+    }
+  },
   /** 表单项变更处理 */
   handleFormChange(params: SearchChangeParams) {
     console.log("表单项变更:", params);
@@ -211,11 +228,11 @@ const method = reactive({
 
     await nextTick();
 
-    if (menuButtonRef.value) {
-      menuButtonRef.value.handleListPage();
-    }
     if (menuColumnRef.value) {
       menuColumnRef.value.handleListPage();
+    }
+    if (menuButtonRef.value) {
+      menuButtonRef.value.handleListPage();
     }
   },
   /** 回显数据 */
@@ -340,6 +357,7 @@ const {columnChecks, columns} = useCheckedColumns(() => [
 ]);
 
 onMounted(() => {
+  method.handleListByNames();
   method.handleListPage();
 });
 </script>
@@ -556,12 +574,14 @@ onMounted(() => {
                 <MenuButton
                   ref="menuButtonRef"
                   :menu_id="pageData.menu_id"
+                  :dict-type-list="artDict"
                 />
               </el-tab-pane>
               <el-tab-pane label="列表字段" name="列表字段">
                 <MenuColumn
                   ref="menuColumnRef"
                   :menu_id="pageData.menu_id"
+                  :dict-type-list="artDict"
                 />
               </el-tab-pane>
             </el-tabs>

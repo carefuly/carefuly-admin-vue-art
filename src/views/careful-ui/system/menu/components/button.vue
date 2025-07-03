@@ -1,21 +1,33 @@
 <script setup lang="ts">
 import ArtButtonTable from "@/components/core/forms/ArtButtonTable.vue";
 import {useCheckedColumns} from "@/composables/useCheckedColumns";
-import {useDictAll} from "@/hooks/dict";
-import {AppRouteRecord} from "@/types/router";
-import {skyMsgBox, skyMsgSuccess, skyMsgError, skyMsgInfo, skyMsgWarning, skyNoticeError, skyNoticeSuccess} from "@/utils/toast";
+import {skyMsgBox, skyMsgError, skyMsgInfo, skyMsgWarning, skyNoticeError, skyNoticeSuccess} from "@/utils/toast";
 import {MenuButtonService} from "@/api/careful-ui/system/menu/menu_button";
+
+interface DictItem {
+  value: any;   // 根据实际情况，value可以是string, number等
+  label: any;
+  dictTag: string;
+  // ...其他属性
+}
 
 const props = withDefaults(
   defineProps<{
     menu_id: string
+    dictTypeList: {
+      [key: string]: DictItem[];
+    }
   }>(),
   {
     menu_id: "",
   },
 );
 
-const {artDict} = useDictAll(["接口请求方法", "状态"]);
+const dictNames = ["接口请求方法", "状态"];
+let artDict: any = reactive({
+  "接口请求方法": [],
+  "状态": [],
+});
 
 // 定义表单搜索初始值
 const initialSearchState = {
@@ -75,7 +87,6 @@ const pageData = reactive({
     {label: '接口地址', prop: 'api'},
     {label: '请求方式', prop: 'method'},
     {label: '状态', prop: 'status'},
-    {label: '创建时间', prop: 'createTime'},
     {label: '备注', prop: 'remark'},
   ],
   total: 0,
@@ -236,17 +247,38 @@ const method = reactive({
     method.handleListPage();
   },
 });
+// 获取字典类型
+const handleDictTypeTag = (value: any, dictName: string) => {
+  const radio = props.dictTypeList[dictName].find((item: any) => item.value.toString() === value.toString());
+  return radio?.dictTag;
+};
+// 获取字典文本
+const handleDictTextTag = (value: any, dictName: string) => {
+  const radio = props.dictTypeList[dictName].find((item: any) => item.value.toString() === value.toString());
+  return radio?.label;
+};
 // 动态列配置
 const {columnChecks, columns} = useCheckedColumns(() => [
   {type: 'selection'}, // 勾选列
-  {label: '按钮名称', prop: 'name'},
-  {label: '权限值', prop: 'code'},
-  {label: '接口地址', prop: 'api'},
+  {label: '按钮名称', prop: 'name', width: 100},
+  {label: '权限值', prop: 'code', width: 100},
+  {label: '接口地址', prop: 'api', width: 150},
   {
     label: '请求方式',
     prop: 'method',
+    width: 100,
+    formatter: (row: any) => {
+      return h(ElTag, {type: handleDictTypeTag(row.method, '接口请求方法')}, () => handleDictTextTag(row.method, '接口请求方法'))
+    }
   },
-  {label: '状态', prop: 'status'},
+  {
+    label: '状态',
+    prop: 'status',
+    width: 100,
+    formatter: (row: any) => {
+      return h(ElTag, {type: handleDictTypeTag(row.status, '状态')}, () => handleDictTextTag(row.status, '状态'))
+    }
+  },
   {label: '备注', prop: 'remark'},
   {
     prop: 'operation',
@@ -319,10 +351,10 @@ defineExpose({
           <el-tab-pane label="表单" name="表单">
             <el-form ref="formRef" :model="pageData.form" :rules="pageData.rules" label-width="80px">
               <el-form-item label="按钮名称" prop="name">
-                <el-input v-model="pageData.form.name" placeholder="字典名称"/>
+                <el-input v-model="pageData.form.name" placeholder="按钮名称"/>
               </el-form-item>
               <el-form-item label="权限值" prop="code">
-                <el-input v-model="pageData.form.code" placeholder="字典编码"/>
+                <el-input v-model="pageData.form.code" placeholder="权限值"/>
               </el-form-item>
               <el-form-item label="接口地址" prop="code">
                 <el-input v-model="pageData.form.api" placeholder="接口地址"/>
@@ -330,7 +362,7 @@ defineExpose({
               <el-form-item label="请求方式" prop="type">
                 <el-select v-model="pageData.form.method" placeholder="请求方式">
                   <el-option
-                    v-for="item in artDict['接口请求方法']"
+                    v-for="item in props.dictTypeList['接口请求方法']"
                     :label="item['label']"
                     :value="item['value']"
                   />
@@ -342,7 +374,7 @@ defineExpose({
               <el-form-item label="状态" prop="status">
                 <el-select v-model="pageData.form.status" placeholder="状态">
                   <el-option
-                    v-for="item in artDict['状态']"
+                    v-for="item in props.dictTypeList['状态']"
                     :label="item['label']"
                     :value="item['value']"
                   />

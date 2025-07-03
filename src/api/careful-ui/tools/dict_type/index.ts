@@ -11,6 +11,7 @@ enum API {
   BATCH_DELETE = "/v1/tools/dictType/delete/batchDelete",
   UPDATE = "/v1/tools/dictType/update",
   GET_BY_ID = "/v1/tools/dictType/getById/",
+  LIST_BY_DICT_NAMES = "/v1/tools/dictType/listByDictNames",
   LIST_PAGE = "/v1/tools/dictType/listPage",
   LIST_ALL = "/v1/tools/dictType/listAll",
 }
@@ -62,6 +63,14 @@ export class DictTypeService {
   static async getById(id: string) {
     return await request.get<BaseResponse>({
       url: API.GET_BY_ID + id,
+    });
+  }
+
+  // 根据字典名称批量查询字典项
+  static async listByDictNames(data: string[]) {
+    return await request.post<BaseResponse>({
+      url: API.LIST_BY_DICT_NAMES,
+      data
     });
   }
 
