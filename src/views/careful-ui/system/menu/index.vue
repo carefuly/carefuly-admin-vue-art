@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import ArtButtonTable from "@/components/core/forms/ArtButtonTable.vue";
+import MenuButton from "./components/button.vue";
+import MenuColumn from "./components/column.vue";
 import {useCheckedColumns} from "@/composables/useCheckedColumns";
 import {IconTypeEnum} from "@/enums/appEnum";
 import {useDictAll} from "@/hooks/dict";
@@ -20,7 +22,10 @@ const skyDrawerRef = ref();
 const tableRef = ref();
 const formRef = ref();
 const skyExcelRef = ref();
+const menuButtonRef = ref();
+const menuColumnRef = ref();
 const pageData = reactive({
+  menu_id: "",
   pagination: {
     page: 1,
     pageSize: 15,
@@ -199,9 +204,19 @@ const method = reactive({
       });
   },
   /** 打开菜单按钮和列 */
-  handleOpenMenuColumn() {
+  async handleOpenMenuColumn(row: any) {
+    pageData.menu_id = row.id;
     pageData.tabsMenu = "菜单按钮";
     skyDrawerRef.value.skyOpen();
+
+    await nextTick();
+
+    if (menuButtonRef.value) {
+      menuButtonRef.value.handleListPage();
+    }
+    if (menuColumnRef.value) {
+      menuColumnRef.value.handleListPage();
+    }
   },
   /** 回显数据 */
   async handleEcho(id: any) {
@@ -317,7 +332,7 @@ const {columnChecks, columns} = useCheckedColumns(() => [
         }),
         h(ArtButtonTable, {
           type: 'more',
-          onClick: () => method.handleOpenMenuColumn()
+          onClick: () => method.handleOpenMenuColumn(row)
         }),
       ])
     }
@@ -537,8 +552,18 @@ onMounted(() => {
               type="card"
               class="demo-tabs"
             >
-              <el-tab-pane label="菜单按钮" name="菜单按钮">User</el-tab-pane>
-              <el-tab-pane label="列表字段" name="列表字段">Config</el-tab-pane>
+              <el-tab-pane label="菜单按钮" name="菜单按钮">
+                <MenuButton
+                  ref="menuButtonRef"
+                  :menu_id="pageData.menu_id"
+                />
+              </el-tab-pane>
+              <el-tab-pane label="列表字段" name="列表字段">
+                <MenuColumn
+                  ref="menuColumnRef"
+                  :menu_id="pageData.menu_id"
+                />
+              </el-tab-pane>
             </el-tabs>
           </template>
         </ArtDrawer>

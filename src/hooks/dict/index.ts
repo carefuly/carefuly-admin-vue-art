@@ -30,3 +30,23 @@ export function useDictAll(dictType: Array<string>) {
   });
   return {artDict};
 }
+
+export async function useDictTypeList(value: any, dictName: string) {
+  const res: any = await DictTypeService.listAll({dictName: dictName, status: true});
+  if (!Array.isArray(res.data) || res.data.length === 0) {
+    return undefined;
+  }
+  switch (typeof value) {
+    case "string":
+      console.log(res.data.find((item: any) => item.strValue.toString() == value.toString()));
+      return res.data.find((item: any) => item.strValue.toString() == value.toString());
+    case "number":
+      console.log(res.data.find((item: any) => item.strValue.toString() == value.toString()));
+      return res.data.find((item: any) => item.intValue.toString() == value.toString());
+    case "boolean":
+      console.log(res.data.find((item: any) => item.strValue.toString() == value.toString()));
+      return res.data.find((item: any) => item.boolValue.toString() == value.toString());
+    default:
+      return undefined;
+  }
+}
