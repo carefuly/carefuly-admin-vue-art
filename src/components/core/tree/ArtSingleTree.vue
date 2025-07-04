@@ -136,12 +136,6 @@ defineExpose({
         </el-icon>
       </div>
     </div>
-    <!--    <div v-if="title" class="tree-header">-->
-    <!--      <el-icon v-if="showIcon" class="tree-icon">-->
-    <!--        <component :is="icon"/>-->
-    <!--      </el-icon>-->
-    <!--      <h3 class="tree-title">{{ title }}</h3>-->
-    <!--    </div>-->
 
     <!-- 搜索框 -->
     <div class="tree-controls">
