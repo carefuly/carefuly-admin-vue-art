@@ -361,7 +361,7 @@ onMounted(() => {
 
 <template>
   <ArtTableFullScreen>
-    <div class="page" id="table-full-screen">
+    <div class="page art-full-height" id="table-full-screen">
       <!-- 搜索栏 -->
       <ArtSearchBar
         v-model:filter="pageData.formFilters"

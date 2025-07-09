@@ -6,7 +6,6 @@ import {BaseResponse} from '@/types/api';
 enum API {
   CREATE = "/v1/tools/dictType/create",
   IMPORT = "/v1/tools/dictType/import",
-  EXPORT = "/v1/tools/dictType/export",
   DELETE = "/v1/tools/dictType/delete/",
   BATCH_DELETE = "/v1/tools/dictType/delete/batchDelete",
   UPDATE = "/v1/tools/dictType/update",
@@ -14,6 +13,7 @@ enum API {
   LIST_BY_DICT_NAMES = "/v1/tools/dictType/listByDictNames",
   LIST_PAGE = "/v1/tools/dictType/listPage",
   LIST_ALL = "/v1/tools/dictType/listAll",
+  EXPORT = "/v1/tools/dictType/export",
 }
 
 export class DictTypeService {

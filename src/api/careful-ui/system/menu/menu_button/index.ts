@@ -11,6 +11,7 @@ enum API {
   UPDATE = "/v1/system/menuButton/update",
   GET_BY_ID = "/v1/system/menuButton/getById/",
   LIST_PAGE = "/v1/system/menuButton/listPage",
+  LIST_BY_MENU_IDS = "/v1/system/menuButton/listByMenuIds",
   LIST_ALL = "/v1/system/menuButton/listAll",
   EXPORT = "/v1/system/menuButton/export",
 }
@@ -70,6 +71,14 @@ export class MenuButtonService {
     return await request.get<BaseResponse>({
       url: API.LIST_PAGE,
       params
+    });
+  }
+
+  // 分页查询
+  static async listByMenuIds(data: any) {
+    return await request.post<BaseResponse>({
+      url: API.LIST_BY_MENU_IDS,
+      data
     });
   }
 

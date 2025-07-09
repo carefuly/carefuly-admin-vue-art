@@ -6,6 +6,7 @@ import {SearchChangeParams, SearchFormItem} from '@/types';
 import {skyMsgBox, skyMsgSuccess, skyMsgError, skyMsgInfo, skyMsgWarning, skyNoticeError, skyNoticeSuccess} from "@/utils/toast";
 import {DictTypeService} from "@/api/careful-ui/tools/dict_type";
 import {RoleService} from "@/api/careful-ui/system/role";
+import {ElLink} from "element-plus";
 
 const dictNames = ["数据权限范围", "状态"];
 let artDict: any = reactive({
@@ -35,12 +36,14 @@ const pageData = reactive({
   confirmLoading: false,
   dialogVisible: false,
   dialogType: "add",
+  active: 0,
   form: {
     id: null,
     name: "",
     code: "",
     sort: 1,
     status: true,
+    menu_ids: [],
     remark: "",
   },
   rules: {
@@ -126,6 +129,7 @@ const method = reactive({
       pageData.form.code = "";
       pageData.form.sort = 1;
       pageData.form.status = true;
+      pageData.form.menu_ids = [];
       pageData.form.remark = "";
     }
   },
@@ -176,12 +180,28 @@ const method = reactive({
   async handlePermissions(row: any) {
     skyDrawerRef.value.skyOpen();
 
+    await method.handleEcho(row.id);
     await nextTick();
 
     if (permissionRef.value) {
       permissionRef.value.handleMenuList();
+      permissionRef.value.handleMenuButtonList();
     }
   },
+  /** 上一步 */
+  handlePrev() {
+    pageData.active = Math.max(0, pageData.active - 1);
+  },
+  /** 下一步 */
+  handleNext() {
+    pageData.active = Math.min(3, pageData.active + 1);
+  },
+  /** 选择菜单 */
+  handleCheckMenu(active: number, data: any) {
+    pageData.form.menu_ids = data.map((item: any) => item.id);
+  },
+
+
   /** 回显数据 */
   async handleEcho(id: any) {
     if (id === null || id === "") {
@@ -365,7 +385,7 @@ const {columnChecks, columns} = useCheckedColumns(() => [
         h(ArtButtonTable, {
           type: 'delete',
           onClick: () => method.handleDelete(row)
-        })
+        }),
       ])
     }
   }
@@ -482,13 +502,28 @@ onMounted(() => {
           ref="skyDrawerRef"
           title="权限设置"
           size="50%"
+          :footerHidden="true"
           @skyConfirm="skyDrawerRef.skyQuickClose();"
           @skyCancel="skyDrawerRef.skyClose();"
         >
           <template #content>
             <Permission
               ref="permissionRef"
+              :active="pageData.active"
+              :form="pageData.form"
+              @handle-check-menu="method.handleCheckMenu"
             />
+          </template>
+          <template #footer>
+            <!-- 按钮 -->
+            {{ pageData.active }}
+            <div>
+              <el-space>
+                <el-button :disabled="pageData.active === 0" plain @click="method.handlePrev">上一步</el-button>
+                <el-button :disabled="pageData.active === 3" type="primary" plain @click="method.handleNext">下一步</el-button>
+                <el-button :disabled="!(pageData.active === 3)" type="success" plain>提交</el-button>
+              </el-space>
+            </div>
           </template>
         </ArtDrawer>
       </el-card>

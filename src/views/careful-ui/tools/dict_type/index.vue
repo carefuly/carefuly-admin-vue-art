@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ArtButtonTable from "@/components/core/forms/ArtButtonTable.vue";
 import {useCheckedColumns} from "@/composables/useCheckedColumns";
 import {useDictAll} from "@/hooks/dict";
 import {useScreenStore} from "@/hooks/screen";
@@ -334,24 +333,6 @@ const {columnChecks, columns} = useCheckedColumns(() => [
   {label: '状态', prop: 'status'},
   {label: '创建时间', prop: 'createTime'},
   {label: '备注', prop: 'remark'},
-  {
-    prop: 'operation',
-    label: '操作',
-    width: 150,
-    fixed: 'right', // 固定在右侧
-    formatter: (row: any) => {
-      return h('div', [
-        h(ArtButtonTable, {
-          type: 'edit',
-          onClick: async () => method.showDialog('edit', row)
-        }),
-        h(ArtButtonTable, {
-          type: 'delete',
-          onClick: () => method.handleDelete(row)
-        })
-      ])
-    }
-  }
 ]);
 
 onMounted(() => {
@@ -442,7 +423,21 @@ onMounted(() => {
           @current-change="method.handlePageChange"
         >
           <template #default>
-            <el-table-column v-for="col in columns" :key="col.prop || col.type" v-bind="col" show-overflow-tooltip/>
+            <el-table-column v-for="col in columns" :key="col.prop || col.type" v-bind="col" show-overflow-tooltip>
+              <template #default="scope">
+                <span v-if="['标签类型', '数据类型', '状态'].includes(col.label || '')">
+                  <ArtTag :tagOptions="artDict[col.label || '']" :value="scope.row[col.prop]"/>
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="150" fixed="right">
+              <template #default="scope">
+                <el-row>
+                  <el-button type="primary" link @click="method.showDialog('edit', scope.row)">编辑</el-button>
+                  <el-button type="danger" link @click="method.handleDelete(scope.row)">删除</el-button>
+                </el-row>
+              </template>
+            </el-table-column>
           </template>
         </ArtTable>
 
