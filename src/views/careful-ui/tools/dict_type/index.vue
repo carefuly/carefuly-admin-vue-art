@@ -20,6 +20,7 @@ const initialSearchState = {
   status: true,
 };
 const tabs = ref("表单");
+const singleTreeRef = ref();
 const formRef = ref();
 const skyExcelRef = ref();
 const pageData = reactive({
@@ -108,6 +109,7 @@ const method = reactive({
     Object.assign(pageData.formFilters, {...initialSearchState});
     pageData.pagination.page = 1; // 重置到第一页
     pageData.pagination.pageSize = 15;
+    singleTreeRef.value.clearSelection();
     method.handleListPage();
   },
   /** 搜索 */
@@ -245,6 +247,27 @@ const method = reactive({
       }
     })
   },
+  /** 导出 */
+  async handleDownload() {
+    const res: any = await DictTypeService.export(pageData.formFilters);
+    // 创建下载链接
+    const url = window.URL.createObjectURL(
+      new Blob([res],
+        {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})
+    );
+    // 创建下载链接
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `字典信息导出_${new Date().toLocaleString()}.xlsx`);
+    document.body.appendChild(link);
+    // 触发下载
+    link.click();
+    // 清理
+    window.URL.revokeObjectURL(url);
+    link.remove();
+
+    skyMsgSuccess("导出成功🌻");
+  },
   /** 是否多选 */
   handleSelectionChange(selection: any) {
     pageData.ids = selection.map((item: any) => item.id);
@@ -360,6 +383,7 @@ onMounted(() => {
           </el-button>
         </h3>
         <ArtSingleTree
+          ref="singleTreeRef"
           title="数据字典"
           :loading="pageData.treeLoading"
           :data="pageData.treeList"
@@ -404,7 +428,7 @@ onMounted(() => {
             <el-button @click="method.showDialog('add')">新增</el-button>
             <el-button type="danger" plain @click="method.handleBatchDelete">删除</el-button>
             <!--            <el-button type="success" plain @click="method.handleImportExcel">导入</el-button>-->
-            <!--            <el-button type="warning" plain @click="method.handleDownload">导出</el-button>-->
+            <el-button type="warning" plain @click="method.handleDownload">导出</el-button>
           </template>
         </ArtTableHeader>
 
