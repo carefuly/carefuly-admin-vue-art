@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ArtButtonTable from "@/components/core/forms/ArtButtonTable.vue";
 import {useCheckedColumns} from "@/composables/useCheckedColumns";
 import {useDictAll} from "@/hooks/dict";
 import {SearchChangeParams, SearchFormItem} from '@/types';
