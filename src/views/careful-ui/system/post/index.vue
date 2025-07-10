@@ -397,12 +397,6 @@ onMounted(() => {
         </el-dialog>
       </el-card>
     </div>
-    <!-- excel导入 -->
-    <ArtExcel
-      ref="skyExcelRef"
-      @handleTemplateExcel="method.handleTemplateExcel"
-      @handleConfirmUpload="method.handleConfirmUpload"
-    />
   </ArtTableFullScreen>
 </template>
 

@@ -1,38 +1,71 @@
 // 导入二次封装axios
-import sky from "@/utils/axios";
+import request from "@/utils/http";
+import {BaseResponse} from '@/types/api';
 
 // 统一管理接口
 enum API {
   CREATE = "/v1/system/dept/create",
-  EXPORT = "/v1/system/dept/export",
   DELETE = "/v1/system/dept/delete/",
-  BATCH_DELETE = "/v1/system/dept/batch/delete",
+  BATCH_DELETE = "/v1/system/dept/delete/batchDelete",
   UPDATE = "/v1/system/dept/update",
-  LIST_TREE = "/v1/system/dept/listTree",
-  LIST_ALL = "/v1/system/dept/listAll",
   GET_BY_ID = "/v1/system/dept/getById/",
+  LIST_TREE = "/v1/system/dept/listTree",
+  EXPORT = "/v1/system/dept/export",
 }
 
-// 添加
-export const create = (data: any) => sky.post(API.CREATE, data);
+export class DeptService {
+  // 新增
+  static async create(data: any) {
+    return await request.post<BaseResponse>({
+      url: API.CREATE,
+      data,
+    });
+  }
 
-// 导出
-export const exportExcel = () => sky.export(API.EXPORT);
+  // 删除
+  static async delete(id: string) {
+    return await request.del<BaseResponse>({
+      url: API.DELETE + id,
+    });
+  }
 
-// 删除
-export const deleteById = (id: any) => sky.delete(API.DELETE + id);
+  // 批量删除
+  static async batchDelete(data: string[]) {
+    return await request.post<BaseResponse>({
+      url: API.BATCH_DELETE,
+      data,
+    });
+  }
 
-// 批量删除
-export const batchDelete = (ids: any) => sky.post(API.BATCH_DELETE, ids);
+  // 更新
+  static async update(data: any) {
+    return await request.put<BaseResponse>({
+      url: API.UPDATE,
+      data,
+    });
+  }
 
-// 更新
-export const update = (data: any) => sky.put(API.UPDATE, data);
+  // 根据ID进行查询
+  static async getById(id: string) {
+    return await request.get<BaseResponse>({
+      url: API.GET_BY_ID + id,
+    });
+  }
 
-// 分页查询
-export const listTree = (params: any) => sky.get(API.LIST_TREE, params);
+  // 获取树形结构
+  static async listTree(params: any) {
+    return await request.get<BaseResponse>({
+      url: API.LIST_TREE,
+      params,
+    });
+  }
 
-// 列表查询
-export const listAll = () => sky.get(API.LIST_ALL);
-
-// 根据ID进行查询
-export const getById = (id: any) => sky.get(API.GET_BY_ID + id);
+  // 导出
+  static async export(params: any) {
+    return await request.get({
+      url: API.EXPORT,
+      params,
+      responseType: "blob",
+    });
+  }
+}
