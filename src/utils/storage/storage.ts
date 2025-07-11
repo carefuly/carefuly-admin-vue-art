@@ -1,6 +1,6 @@
 import {ElMessage} from 'element-plus'
 import {router} from '@/router'
-// import {useUserStore} from '@/store/modules/user'
+import {useUserStore} from '@/store/modules/user'
 import {StorageConfig} from '@/utils/storage/storage-config'
 import {RoutesAlias} from '@/router/routesAlias'
 
@@ -80,7 +80,7 @@ class StorageCompatibilityManager {
     setTimeout(() => {
       try {
         localStorage.clear()
-        // useUserStore().logOut()
+        useUserStore().logOut()
         router.push(RoutesAlias.Login)
         console.info('[Storage] 已执行系统登出')
       } catch (error) {

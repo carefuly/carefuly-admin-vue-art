@@ -1,7 +1,7 @@
-import {useCommon} from '@/composables/useCommon';
-import {useTheme} from '@/composables/useTheme';
-import {SystemThemeEnum} from '@/enums/appEnum';
-import {useSettingStore} from '@/store/modules/setting';
+import {useCommon} from '@/composables/useCommon'
+import {useTheme} from '@/composables/useTheme'
+import {SystemThemeEnum} from '@/enums/appEnum'
+import {useSettingStore} from '@/store/modules/setting'
 
 const {LIGHT, DARK} = SystemThemeEnum
 

@@ -17,6 +17,7 @@ export interface UserInfo {
   avatar?: string
   dept?: object
   dept_id?: string
+  buttons: string[]
   post_ids?: string[]
   role_ids?: string[]
 }
