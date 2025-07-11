@@ -1,23 +1,15 @@
 <script setup lang="ts">
-import ArtButtonTable from "@/components/core/forms/ArtButtonTable.vue";
 import MenuButton from "./components/button.vue";
 import MenuColumn from "./components/column.vue";
 import {useCheckedColumns} from "@/composables/useCheckedColumns";
 import {IconTypeEnum} from "@/enums/appEnum";
 import {useDictAll} from "@/hooks/dict";
 import {SearchChangeParams, SearchFormItem} from '@/types';
-import {skyMsgBox, skyMsgSuccess, skyMsgError, skyMsgInfo, skyMsgWarning, skyNoticeError, skyNoticeSuccess} from "@/utils/toast";
-import {DictTypeService} from "@/api/careful-ui/tools/dict_type";
+import {skyMsgBox, skyMsgError, skyMsgInfo, skyMsgSuccess, skyMsgWarning, skyNoticeError, skyNoticeSuccess} from "@/utils/toast";
 import {MenuService} from "@/api/careful-ui/system/menu";
 
 const iconType = ref(IconTypeEnum.UNICODE);
-// const {artDict} = useDictAll(["菜单类型", "状态"]);
-const dictNames = ["菜单类型", "接口请求方法", "状态"];
-let artDict: any = reactive({
-  "菜单类型": [],
-  "接口请求方法": [],
-  "状态": [],
-});
+const {artDict} = useDictAll(["接口请求方法", "菜单类型", "状态"]);
 
 // 定义表单搜索初始值
 const initialSearchState = {
@@ -81,30 +73,22 @@ const pageData = reactive({
   ids: [],
   loading: false,
   columnOptions: [
-    // {label: '勾选', type: 'selection'},
-    // {label: '字典名称', prop: 'name'},
-    // {label: '字典编码', prop: 'code'},
-    // {label: '字典分类', prop: 'type'},
-    // {label: '数据类型', prop: 'valueType'},
-    // {label: '状态', prop: 'status'},
-    // {label: '创建时间', prop: 'create_time'},
-    // {label: '备注', prop: 'remark'},
-    // {label: '操作', prop: 'operation'}
+    {label: '勾选', type: 'selection'},
+    {label: '菜单标题', prop: 'title'},
+    {label: '菜单类型', prop: 'type'},
+    {label: '组件名称', prop: 'name'},
+    {label: '组件地址', prop: 'component'},
+    {label: '路由地址', prop: 'path'},
+    {label: '重定向地址', prop: 'redirect'},
+    {label: '排序', prop: 'sort'},
+    {label: '状态', prop: 'status'},
+    {label: '创建时间', prop: 'createTime'},
+    {label: '备注', prop: 'remark'},
   ],
   total: 0,
   tableList: [],
 });
 const method = reactive({
-  /** 获取指定字典项 */
-  async handleListByNames() {
-    artDict = {};
-    try {
-      const res = await DictTypeService.listByDictNames(dictNames);
-      artDict = res.data;
-    } catch (error) {
-      skyMsgError(`数据查询失败，请刷新重试🌻【${error}】`);
-    }
-  },
   /** 表单项变更处理 */
   handleFormChange(params: SearchChangeParams) {
     console.log("表单项变更:", params);
@@ -220,6 +204,7 @@ const method = reactive({
         skyMsgError("已取消🌻");
       });
   },
+
   /** 打开菜单按钮和列 */
   async handleOpenMenuColumn(row: any) {
     pageData.menu_id = row.id;
@@ -235,6 +220,7 @@ const method = reactive({
       menuButtonRef.value.handleListPage();
     }
   },
+
   /** 回显数据 */
   async handleEcho(id: any) {
     if (id === null || id === "") {
@@ -276,6 +262,27 @@ const method = reactive({
         skyMsgError("验证失败，请检查填写内容🌻");
       }
     })
+  },
+  /** 导出 */
+  async handleDownload() {
+    const res: any = await MenuService.export(pageData.formFilters);
+    // 创建下载链接
+    const url = window.URL.createObjectURL(
+      new Blob([res],
+        {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})
+    );
+    // 创建下载链接
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `菜单信息导出_${new Date().toLocaleString()}.xlsx`);
+    document.body.appendChild(link);
+    // 触发下载
+    link.click();
+    // 清理
+    window.URL.revokeObjectURL(url);
+    link.remove();
+
+    skyMsgSuccess("导出成功🌻");
   },
   /** 是否多选 */
   handleSelectionChange(selection: any) {
@@ -332,32 +339,9 @@ const {columnChecks, columns} = useCheckedColumns(() => [
   {label: '状态', prop: 'status'},
   {label: '创建时间', prop: 'createTime'},
   {label: '备注', prop: 'remark'},
-  {
-    prop: 'operation',
-    label: '操作',
-    width: 180,
-    fixed: 'right', // 固定在右侧
-    formatter: (row: any) => {
-      return h('div', [
-        h(ArtButtonTable, {
-          type: 'edit',
-          onClick: async () => method.showDialog('edit', row)
-        }),
-        h(ArtButtonTable, {
-          type: 'delete',
-          onClick: () => method.handleDelete(row)
-        }),
-        h(ArtButtonTable, {
-          type: 'more',
-          onClick: () => method.handleOpenMenuColumn(row)
-        }),
-      ])
-    }
-  }
 ]);
 
 onMounted(() => {
-  method.handleListByNames();
   method.handleListPage();
 });
 </script>
@@ -387,8 +371,7 @@ onMounted(() => {
             <el-button type="info" plain @click="method.handleToggleExpand" v-ripple>
               {{ pageData.isExpanded ? '收起' : '展开' }}
             </el-button>
-            <!--            <el-button type="success" plain @click="method.handleImportExcel">导入</el-button>-->
-            <!--            <el-button type="warning" plain @click="method.handleDownload">导出</el-button>-->
+            <el-button type="warning" plain @click="method.handleDownload">导出</el-button>
           </template>
         </ArtTableHeader>
 
@@ -403,7 +386,28 @@ onMounted(() => {
           @selection-change="method.handleSelectionChange"
         >
           <template #default>
-            <el-table-column v-for="col in columns" :key="col.prop || col.type" v-bind="col" show-overflow-tooltip/>
+            <el-table-column v-for="col in columns" :key="col.prop || col.type" v-bind="col" show-overflow-tooltip>
+              <template #default="scope">
+                <span v-if="['菜单类型', '状态'].includes(col.label || '')">
+                  <ArtTag :tagOptions="artDict[col.label || '']" :value="scope.row[col.prop]"/>
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="180" fixed="right">
+              <template #default="scope">
+                <el-row>
+                  <el-button type="primary" link @click="method.showDialog('edit', scope.row)">编辑</el-button>
+                  <el-button type="danger" link @click="method.handleDelete(scope.row)">删除</el-button>
+                  <el-button
+                    v-if="scope.row.type !== 1"
+                    type="success"
+                    link
+                    @click="method.handleOpenMenuColumn(scope.row)"
+                  >菜单按钮
+                  </el-button>
+                </el-row>
+              </template>
+            </el-table-column>
           </template>
         </ArtTable>
 

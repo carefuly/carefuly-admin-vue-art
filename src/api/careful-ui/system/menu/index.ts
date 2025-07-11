@@ -5,7 +5,6 @@ import {BaseResponse} from '@/types/api';
 // 统一管理接口
 enum API {
   CREATE = "/v1/system/menu/create",
-  IMPORT = "/v1/system/menu/import",
   DELETE = "/v1/system/menu/delete/",
   BATCH_DELETE = "/v1/system/menu/delete/batchDelete",
   UPDATE = "/v1/system/menu/update",
@@ -21,17 +20,6 @@ export class MenuService {
     return await request.post<BaseResponse>({
       url: API.CREATE,
       data,
-    });
-  }
-
-  // 导入
-  static async import(data: any) {
-    return await request.post<BaseResponse>({
-      url: API.IMPORT,
-      data,
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
     });
   }
 
