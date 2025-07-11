@@ -25,6 +25,35 @@
   }
 }
 
+// el-card 背景色跟系统背景色保持一致
+html.dark .el-card {
+  --el-card-bg-color: var(--art-main-bg-color) !important;
+}
+
+// 修改 el-loading-mask 背景色
+.el-loading-mask {
+  background-color: var(--art-main-bg-color) !important  ;
+}
+
+// 修改 el-pagination 大小
+.el-pagination--default {
+  --el-pagination-button-width: 32px !important;
+  --el-pagination-button-height: var(--el-pagination-button-width) !important;
+
+  .el-select--default .el-select__wrapper {
+    min-height: var(--el-pagination-button-width) !important;
+  }
+
+  .el-pagination__jump .el-input {
+    height: var(--el-pagination-button-width) !important;
+  }
+}
+
+.el-pager li {
+  padding: 0 10px !important;
+  // border: 1px solid red !important;
+}
+
 // 优化菜单折叠展开动画（提升动画流畅度）
 .el-menu.el-menu--inline {
   transition: max-height 0.26s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -295,7 +324,7 @@
 
 // 修改 dialog 动画
 .dialog-fade-enter-active {
-  .el-dialog {
+  .el-dialog:not(.is-draggable) {
     animation: dialog-open 0.3s cubic-bezier(0.32, 0.14, 0.15, 0.86);
 
     // 修复 el-dialog 动画后宽度不自适应问题
@@ -308,8 +337,8 @@
 .dialog-fade-leave-active {
   animation: fade-out 0.2s linear;
 
-  .el-dialog {
-    animation: dialog-close 0.2s cubic-bezier(0.78, 0.14, 0.15, 0.86);
+  .el-dialog:not(.is-draggable) {
+    animation: dialog-close 0.5s;
   }
 }
 

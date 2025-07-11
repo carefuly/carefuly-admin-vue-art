@@ -1,13 +1,6 @@
 // 全局样式
 
 @font-face {
-  font-family: 'AppleFont';
-  font-style: normal;
-  font-weight: 400;
-  src: url(../fonts/AppleFont.woff2) format('woff2');
-}
-
-@font-face {
   font-family: 'DMSans';
   font-style: normal;
   font-weight: 400;
@@ -46,10 +39,6 @@
 @media screen and (max-width: $device-phone) {
   * {
     cursor: default !important;
-  }
-
-  .el-col2 {
-    margin-top: 15px;
   }
 }
 
@@ -144,12 +133,6 @@
   }
 }
 
-html,
-body {
-  touch-action: none; /* 禁用触摸事件 */
-  overflow-x: hidden; /* 禁用横向滚动 */
-}
-
 // 元素全屏
 .el-full-screen {
   position: fixed;
@@ -157,16 +140,14 @@ body {
   left: 0;
   right: 0;
   width: 100vw !important;
-  height: 100vh !important;
-  z-index: 500;
+  height: 100% !important;
+  z-index: 2300;
   margin-top: 0;
   padding: 15px;
   box-sizing: border-box;
   background-color: var(--art-main-bg-color);
-
-  .art-table-full-screen {
-    height: 100% !important;
-  }
+  display: flex;
+  flex-direction: column;
 }
 
 // 表格卡片
@@ -180,5 +161,16 @@ body {
   .el-card__body {
     height: 100%;
     overflow: hidden;
+  }
+}
+
+// 容器全高
+.art-full-height {
+  height: var(--art-full-height);
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: $device-phone) {
+    height: auto;
   }
 }

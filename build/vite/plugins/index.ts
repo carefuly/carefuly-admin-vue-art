@@ -1,6 +1,5 @@
 import type {PluginOption} from 'vite';
 import vue from '@vitejs/plugin-vue';
-import UnoCss from "unocss/vite";
 // keepAlive 组件name
 import vueSetupExtend from "vite-plugin-vue-setup-extend";
 // gzip压缩
@@ -19,7 +18,6 @@ export default function createVitePlugins(viteEnv: any, isBuild = false) {
   const vitePlugins: (PluginOption | PluginOption[])[] = [
     appInfo(),
     vue(),
-    UnoCss(),
     vueSetupExtend(),
     viteCompression(),
   ];

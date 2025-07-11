@@ -1,7 +1,7 @@
 // https://github.com/element-plus/element-plus/blob/dev/packages/theme-chalk/src/common/var.scss
 // 自定义Element 亮色主题
 
-@forward '../../../node_modules/element-plus/theme-chalk/src/common/var' //
+@forward 'element-plus/theme-chalk/src/common/var.scss' //
   with (
   //
   $colors: (
@@ -31,4 +31,4 @@
   )
 );
 
-@use '../../../node_modules/element-plus/theme-chalk/src/index' as *;
+@use 'element-plus/theme-chalk/src/index.scss' as *;

@@ -259,16 +259,10 @@ function isValidMenuList(menuList: AppRouteRecord[]): boolean {
 /**
  * 重置路由相关状态
  */
-export function resetRouterState(router: Router): void {
+export function resetRouterState(): void {
   isRouteRegistered.value = false
-  // 清理动态注册的路由
-  router.getRoutes().forEach((route) => {
-    if (route.meta?.dynamic) {
-      router.removeRoute(route.name as string)
-    }
-  })
-  // 清空菜单数据
   const menuStore = useMenuStore()
+  menuStore.removeAllDynamicRoutes()
   menuStore.setMenuList([])
 }
 
