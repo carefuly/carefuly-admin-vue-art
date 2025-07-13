@@ -11,6 +11,7 @@ enum API {
   UPDATE = "/v1/system/menuColumn/update",
   GET_BY_ID = "/v1/system/menuColumn/getById/",
   LIST_PAGE = "/v1/system/menuColumn/listPage",
+  LIST_BY_MENU_IDS = "/v1/system/menuColumn/listByMenuIds",
   LIST_ALL = "/v1/system/menuColumn/listAll",
   EXPORT = "/v1/system/menuColumn/export",
 }
@@ -70,6 +71,14 @@ export class MenuColumnService {
     return await request.get<BaseResponse>({
       url: API.LIST_PAGE,
       params
+    });
+  }
+
+  // 根据菜单ID查询列
+  static async listByMenuIds(data: any) {
+    return await request.post<BaseResponse>({
+      url: API.LIST_BY_MENU_IDS,
+      data
     });
   }
 

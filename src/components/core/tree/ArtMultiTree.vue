@@ -15,7 +15,7 @@ type TreeNode = Record<string, any>;
 type TreeProps = {
   label?: string;
   children?: string;
-  disabled?: string;
+  disabled?: string | boolean;
   isLeaf?: string;
   class?: string;
 };

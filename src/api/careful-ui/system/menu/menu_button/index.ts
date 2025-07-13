@@ -74,7 +74,7 @@ export class MenuButtonService {
     });
   }
 
-  // 分页查询
+  // 根据菜单ID查询按钮
   static async listByMenuIds(data: any) {
     return await request.post<BaseResponse>({
       url: API.LIST_BY_MENU_IDS,

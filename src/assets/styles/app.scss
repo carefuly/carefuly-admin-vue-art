@@ -14,6 +14,20 @@
   src: url(../fonts/Montserrat.woff2) format('woff2');
 }
 
+@font-face {
+  font-family: "AppleFont";
+  font-style: normal;
+  font-weight: 400;
+  src: url(../fonts/AppleFont.woff2) format('woff2');
+}
+
+* {
+  // 全局字体
+  font-family: "AppleFont", Helvetica, "PingFang SC", "Microsoft Yahei", sans-serif;
+  // 修改图标
+  word-break: break-word;
+}
+
 .btn-icon {
   font-size: 10px;
 }

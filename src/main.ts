@@ -37,8 +37,6 @@ import '@/assets/styles/el-dark.scss'                       // Element 自定义
 import '@/assets/styles/dark.scss'                          // 系统主题
 import '@/assets/icons/system/iconfont.js'                  // 系统彩色图标
 import '@/assets/icons/system/iconfont.css'                 // 系统图标
-// UnoCss防止覆盖ElementPlus 的 el-button的css，所有放置最下方
-import "uno.css";
 
 // 引入js
 import '@/utils/sys/console.ts'                             // 控制台输出内容

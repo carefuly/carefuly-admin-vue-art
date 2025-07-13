@@ -1,40 +1,23 @@
-import axios, {InternalAxiosRequestConfig, AxiosRequestConfig, AxiosResponse} from 'axios';
-import type {RequestOptions, ErrorMessageMode} from '@/types/api';
+import axios, {InternalAxiosRequestConfig, AxiosRequestConfig, AxiosResponse} from 'axios'
 import NProgress from "./nprogress";
-import {router} from '@/router';
-import {useUserStore} from '@/store/modules/user';
-import {useWorktabStore} from '@/store/modules/worktab';
-import {resetRouterState} from '@/router/guards/beforeEach';
-import EmojiText from '@/utils/ui/emojo';
-import {ElMessage} from 'element-plus';
-import {ApiStatus} from "@/utils/http/status";
-import {skyMsgError, skyNoticeError} from "@/utils/toast";
-import {AuthService} from "@/api/careful-ui/auth";
-import {RoutesAlias} from "@/router/routesAlias";
+import {useUserStore} from '@/store/modules/user'
+import {ApiStatus} from './status'
+import {skyMsgError, skyNoticeError} from "@/utils";
+import {HttpError, showError} from "@/utils/http/error";
+
+// 常量定义
+const LOGOUT_DELAY = 1000 // 退出登录延迟时间(毫秒)
+const MAX_RETRIES = 2 // 最大重试次数
+const RETRY_DELAY = 1000 // 重试延迟时间(毫秒)
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_GLOB_API_URL + import.meta.env.VITE_GLOB_API_URL_PREFIX, // API地址
   timeout: import.meta.env.VITE_TIMEOUT, // 请求超时时间(毫秒)
   withCredentials: false, // 异步请求携带cookie
-  // transformRequest: [(data) => JSON.stringify(data)], // 请求数据转换为 JSON 字符串
-  // validateStatus: (status) => status >= 200 && status < 300, // 只接受 2xx 的状态码
   headers: {
     get: {'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'},
     post: {'Content-Type': 'application/json;charset=utf-8'}
   },
-  transformResponse: [
-    (data, headers) => {
-      const contentType = headers['content-type']
-      if (contentType && contentType.includes('application/json')) {
-        try {
-          return JSON.parse(data)
-        } catch {
-          return data
-        }
-      }
-      return data
-    }
-  ]
 });
 
 // 请求拦截器
@@ -53,34 +36,34 @@ axiosInstance.interceptors.request.use(
     // 返回修改后的配置
     return request;
   },
-  (error) => {
+  error => {
     // 2. 请求结束
     NProgress.done();
     error.data = {};
-    error.data.msg = `服务器异常，请联系管理员🌻`;
-    return error || Promise.reject(error); // 返回拒绝的 Promise
-  }
-);
+    error.data.msg = "服务器异常，请联系管理员🌻";
+    return error;
+  });
 
 // 响应拦截器
 axiosInstance.interceptors.response.use(
-  async (response: AxiosResponse) => {
-    if (response.data.code === ApiStatus.success) {
-      return response;
-    } else if (response.data.code === ApiStatus.unauthorized) {
+  (response: AxiosResponse) => {
+    const {code, msg} = response.data;
+
+    if (code === ApiStatus.success) {
+      return response.data;
+    } else if (code === ApiStatus.unauthorized) {
       // 401 未登录
       skyNoticeError(`登录已过期，请重新登录🌻`);
-      const userStore = useUserStore();
-      await userStore.logOut();
-      return Promise.reject(response.data.msg);
-    } else if ([400, 403, 500].includes(response.data.code)) {
-      skyMsgError(response.data.msg || "服务器偷偷跑到火星去玩了🌻");
-      return Promise.reject(response.data.msg || "服务器偷偷跑到火星去玩了🌻");
+      logOut();
+      return Promise.reject(msg);
+    } else if ([400, 403, 500].includes(code)) {
+      skyMsgError(msg || "服务器偷偷跑到火星去玩了🌻");
+      return Promise.reject(msg || "服务器偷偷跑到火星去玩了🌻");
     } else {
-      return response;
+      return response.data;
     }
   },
-  (error) => {
+  error => {
     // 2. 请求结束
     NProgress.done();
     // 处理网络错误，不是服务器响应的数据
@@ -144,116 +127,88 @@ axiosInstance.interceptors.response.use(
       skyMsgError(error.data.msg);
     }
     return Promise.reject(error);
-  }
+  },
 );
 
-// 扩展的请求配置接口
-interface ExtendedRequestConfig extends AxiosRequestConfig {
-  requestOptions?: RequestOptions
+// 扩展 AxiosRequestConfig 类型
+interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
+  showErrorMessage?: boolean
 }
 
-// 处理请求配置
-function processRequestConfig(config: ExtendedRequestConfig): AxiosRequestConfig {
-  const {requestOptions, ...axiosConfig} = config;
-
-  // 应用自定义请求选项
-  if (requestOptions) {
-    // 处理是否携带token
-    if (requestOptions.withToken === false) {
-      axiosConfig.headers = {...axiosConfig.headers};
-      delete axiosConfig.headers?.Authorization;
-    }
-
-    // 处理是否添加时间戳
-    if (requestOptions.joinTime) {
-      const timestamp = Date.now();
-      if (axiosConfig.method?.toUpperCase() === 'GET') {
-        axiosConfig.params = {...axiosConfig.params, _t: timestamp};
-      }
-    }
-
-    // 处理API URL
-    if (requestOptions.apiUrl) {
-      axiosConfig.baseURL = requestOptions.apiUrl;
-    }
-  }
-
-  return axiosConfig;
-}
-
-// 处理错误消息
-function handleErrorMessage(error: any, mode: ErrorMessageMode = 'message') {
-  if (mode === 'none') return;
-
-  const errorMessage = error.response?.data.msg;
-  const message = errorMessage
-    ? `${errorMessage} ${EmojiText[500]}`
-    : `请求超时或服务器异常！${EmojiText[500]}`;
-
-  if (mode === 'modal') {
-    // TODO: 可以使用 ElMessageBox 显示模态框
-    skyMsgError(message);
-  } else {
-    skyMsgError(message);
-  }
-}
-
-// 请求
-async function request<T = any>(config: ExtendedRequestConfig): Promise<T> {
-  const processedConfig = processRequestConfig(config);
-
+// 请求函数
+async function request<T = any>(config: ExtendedAxiosRequestConfig): Promise<T> {
   // 对 POST | PUT 请求特殊处理
-  if (
-    processedConfig.method?.toUpperCase() === 'POST' ||
-    processedConfig.method?.toUpperCase() === 'PUT'
-  ) {
-    // 如果已经有 data，则保留原有的 data
-    if (processedConfig.params && !processedConfig.data) {
-      processedConfig.data = processedConfig.params
-      processedConfig.params = undefined // 使用 undefined 而不是空对象
+  if (config.method?.toUpperCase() === 'POST' || config.method?.toUpperCase() === 'PUT') {
+    if (config.params && !config.data) {
+      config.data = config.params;
+      config.params = undefined;
     }
   }
 
   try {
-    const res = await axiosInstance.request<T>(processedConfig)
-    return res.data
-  } catch (e) {
-    if (axios.isAxiosError(e)) {
-      // 处理错误消息
-      const errorMode = config.requestOptions?.errorMessageMode || 'message'
-      handleErrorMessage(e, errorMode)
+    const res = await axiosInstance.request<Api.Http.BaseResponse<T>>(config)
+    return res as T
+  } catch (error) {
+    if (error instanceof HttpError) {
+      // 根据配置决定是否显示错误消息
+      const showErrorMessage = config.showErrorMessage !== false
+      showError(error, showErrorMessage)
     }
-    return Promise.reject(e)
+    return Promise.reject(error)
+  }
+}
+
+// 判断是否需要重试
+function shouldRetry(statusCode: number): boolean {
+  return [
+    ApiStatus.requestTimeout,
+    ApiStatus.internalServerError,
+    ApiStatus.badGateway,
+    ApiStatus.serviceUnavailable,
+    ApiStatus.gatewayTimeout
+  ].includes(statusCode)
+}
+
+// 请求重试函数
+async function retryRequest<T>(
+  config: ExtendedAxiosRequestConfig,
+  retries: number = MAX_RETRIES
+): Promise<T> {
+  try {
+    return await request<T>(config)
+  } catch (error) {
+    if (retries > 0 && error instanceof HttpError && shouldRetry(error.code)) {
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY))
+      return retryRequest<T>(config, retries - 1)
+    }
+    throw error
   }
 }
 
 // API 方法集合
 const api = {
-  get<T>(config: ExtendedRequestConfig): Promise<T> {
-    return request({...config, method: 'GET'}) // GET 请求
+  get<T>(c: any): Promise<T> {
+    return retryRequest({...c, method: 'GET'}) // GET 请求
   },
-  post<T>(config: ExtendedRequestConfig): Promise<T> {
-    return request({...config, method: 'POST'}) // POST 请求
+  post<T>(c: any): Promise<T> {
+    return retryRequest({...c, method: 'POST'}) // POST 请求
   },
-  put<T>(config: ExtendedRequestConfig): Promise<T> {
-    return request({...config, method: 'PUT'}) // PUT 请求
+  put<T>(c: any): Promise<T> {
+    return retryRequest({...c, method: 'PUT'}) // PUT 请求
   },
-  del<T>(config: ExtendedRequestConfig): Promise<T> {
-    return request({...config, method: 'DELETE'}) // DELETE 请求
+  del<T>(c: any): Promise<T> {
+    return retryRequest({...c, method: 'DELETE'}) // DELETE 请求
   },
-  request<T>(config: ExtendedRequestConfig): Promise<T> {
-    return request({...config}) // 通用请求
+  request<T>(c: any): Promise<T> {
+    return retryRequest({...c}) // 通用请求
   }
 }
 
-// 退出登录
-const logOut = () => {
-  skyNoticeError(`登录已过期，请重新登录🌻`);
-  const userStore = useUserStore();
-  userStore.setUserInfo({});
-  userStore.setLoginStatus(false);
-  userStore.setToken("", "");
-  router.replace(RoutesAlias.Login);
+// 退出登录函数
+const logOut = (): void => {
+  setTimeout(() => {
+    useUserStore().logOut()
+  }, LOGOUT_DELAY)
 }
 
 export default api;
