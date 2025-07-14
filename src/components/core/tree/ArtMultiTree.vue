@@ -115,23 +115,29 @@ const expandedKeys = ref<Array<string | number>>([...props.defaultExpandedKeys])
 const allExpandableKeys = computed(() => {
   const keys: Array<string | number> = [];
   const childrenKey = props.nodeProps?.children || 'children';
+  const isLeafKey = props.nodeProps?.isLeaf || 'isLeaf';
 
   const traverse = (nodes: TreeNode[]) => {
     if (!nodes) return;
 
-    nodes.forEach(node => {
+    for (const node of nodes) {
       const key = node[props.nodeKey];
       if (key !== undefined) {
-        // 如果有子节点，则记录为可展开节点
-        if (node[childrenKey]?.length) {
+        // 处理空数组子节点 (保留展开能力)
+        const children = node[childrenKey];
+        const hasChildren = Array.isArray(children) && children.length > 0;
+        const isLeaf = node[isLeafKey] === true || node[isLeafKey] === 'true';
+
+        if (hasChildren || !isLeaf) {
           keys.push(key);
         }
+
         // 递归子节点
-        if (node[childrenKey] && node[childrenKey].length) {
-          traverse(node[childrenKey]);
+        if (hasChildren) {
+          traverse(children);
         }
       }
-    });
+    }
   };
 
   if (props.data) {
@@ -145,7 +151,7 @@ const allNodeKeys = computed(() => {
   const keys: Array<string | number> = [];
 
   const traverse = (nodes: TreeNode[]) => {
-    nodes.forEach(node => {
+    for (const node of nodes) {
       const key = node[props.nodeKey];
       if (key !== undefined) {
         keys.push(key);
@@ -154,7 +160,7 @@ const allNodeKeys = computed(() => {
           traverse(children);
         }
       }
-    });
+    }
   };
 
   if (props.data) {
@@ -185,9 +191,10 @@ const method = reactive({
   },
 
   /** 节点过滤方法 */
-  filterNode: (value: string, data: TreeNode, node: any) => {
+  filterNode: (value: string, data: TreeNode) => {
     if (!value) return true;
-    return data[props.nodeProps?.label || 'label']?.includes(value);
+    const label = data[props.nodeProps?.label || 'label'];
+    return label?.toString().toLowerCase().includes(value.toLowerCase());
   },
 
   /** 节点点击事件处理 */
@@ -208,45 +215,63 @@ const method = reactive({
 
   /** 菜单命令处理 */
   handleMenuCommand: (command: string) => {
-    switch (command) {
-      case 'select-all':
-        method.selectAll();
-        break;
-      case 'deselect-all':
-        method.deselectAll();
-        break;
-      case 'expand-all':
-        method.expandAll();
-        break;
-      case 'collapse-all':
-        method.collapseAll();
-        break;
-      case 'hierarchy-link':
-        method.toggleStrictlyMode(false);
-        break;
-      case 'hierarchy-indep':
-        method.toggleStrictlyMode(true);
-        break;
+    try {
+      switch (command) {
+        case 'select-all':
+          method.selectAll();
+          break;
+        case 'deselect-all':
+          method.deselectAll();
+          break;
+        case 'expand-all':
+          method.expandAll();
+          break;
+        case 'collapse-all':
+          method.collapseAll();
+          break;
+        case 'hierarchy-link':
+          method.toggleStrictlyMode(false);
+          break;
+        case 'hierarchy-indep':
+          method.toggleStrictlyMode(true);
+          break;
+      }
+      dropdownRef.value?.handleClose();
+    } catch (error) {
+      console.error('处理菜单命令时出错:', error);
     }
-    dropdownRef.value?.handleClose();
   },
 
   /** 全选节点 */
   selectAll: () => {
     treeRef.value?.setCheckedKeys(allNodeKeys.value);
+
+    const checkedNodes = treeRef.value?.getCheckedNodes() || [];
+
+    // 然后触发全局的 check 事件
+    emit('check', checkedNodes, null);
   },
 
   /** 取消全选节点 */
   deselectAll: () => {
     treeRef.value?.setCheckedKeys([]);
+    emit('check', [], null);
+  },
+
+  /** 清空选择状态 */
+  clearSelected: () => {
+    treeRef.value?.setCheckedKeys([]);
   },
 
   /** 展开所有节点 */
   expandAll: () => {
-    // 设置展开的节点为所有非叶子节点
     expandedKeys.value = [...allExpandableKeys.value];
     emit('toggle-collapse-all', false);
     emit('update:expandedKeys', [...expandedKeys.value]);
+
+    nextTick(() => {
+      treeRef.value?.filter(pageData.filterText);
+    });
   },
 
   /** 折叠所有节点 */
@@ -259,7 +284,6 @@ const method = reactive({
   /** 切换层级选择模式 */
   toggleStrictlyMode: (strict: boolean) => {
     pageData.checkStrictly = strict;
-    // 强制重新渲染树组件
     pageData.forceUpdateKey += 1;
   },
 
@@ -274,6 +298,49 @@ const method = reactive({
   }
 });
 
+/**
+ * 安全处理节点展开事件
+ */
+const safeHandleNodeExpand = (data: TreeNode, node: any, component: any) => {
+  try {
+    const key = data[props.nodeKey];
+    if (key !== undefined && !expandedKeys.value.includes(key)) {
+      expandedKeys.value.push(key);
+      emit('update:expandedKeys', [...expandedKeys.value]);
+    }
+
+    // 确保原事件能被传播
+    if (component?.handleExpandClick) {
+      component.handleExpandClick();
+    }
+  } catch (error) {
+    console.error('处理节点展开事件时出错:', error);
+  }
+};
+
+/**
+ * 安全处理节点折叠事件
+ */
+const safeHandleNodeCollapse = (data: TreeNode, node: any, component: any) => {
+  try {
+    const key = data[props.nodeKey];
+    if (key !== undefined) {
+      const index = expandedKeys.value.indexOf(key);
+      if (index !== -1) {
+        expandedKeys.value.splice(index, 1);
+        emit('update:expandedKeys', [...expandedKeys.value]);
+      }
+    }
+
+    // 确保原事件能被传播
+    if (component?.handleExpandClick) {
+      component.handleExpandClick();
+    }
+  } catch (error) {
+    console.error('处理节点折叠事件时出错:', error);
+  }
+};
+
 // 监听默认展开节点变化（初始化和外部更新）
 watch(() => props.defaultExpandedKeys, (newVal) => {
   if (newVal) {
@@ -285,12 +352,10 @@ watch(() => props.defaultExpandedKeys, (newVal) => {
 watch(() => props.data, (newData) => {
   if (!newData) return;
 
-  // 检查当前展开的keys是否都在新数据中，如果不在则移除
-  const currentKeysSet = new Set(expandedKeys.value);
+  // 创建新数据的所有key的Set
   const newDataKeys = new Set<string | number>();
-
   const traverse = (nodes: TreeNode[]) => {
-    nodes.forEach(node => {
+    for (const node of nodes) {
       const key = node[props.nodeKey];
       if (key !== undefined) {
         newDataKeys.add(key);
@@ -299,16 +364,13 @@ watch(() => props.data, (newData) => {
           traverse(children);
         }
       }
-    });
+    }
   };
 
   traverse(newData || []);
 
   // 过滤掉新数据中不存在的key
-  const newExpandedKeys = expandedKeys.value.filter(key => newDataKeys.has(key));
-  if (newExpandedKeys.length !== expandedKeys.value.length) {
-    expandedKeys.value = newExpandedKeys;
-  }
+  expandedKeys.value = expandedKeys.value.filter(key => newDataKeys.has(key));
 }, {deep: true});
 
 // 监听默认选中节点变化
@@ -318,7 +380,7 @@ watch(() => props.defaultCheckedKeys, (newVal) => {
       method.setCheckedKeys(newVal);
     });
   }
-}, {immediate: true});
+}, {immediate: true, deep: true});
 
 // 暴露组件方法
 defineExpose({
@@ -328,6 +390,7 @@ defineExpose({
   deselectAll: method.deselectAll,
   expandAll: method.expandAll,
   collapseAll: method.collapseAll,
+  clearSelected: method.clearSelected
 });
 </script>
 
@@ -423,7 +486,7 @@ defineExpose({
       <slot name="other-input"></slot>
     </div>
 
-    <!-- 树形组件容器（添加key强制更新） -->
+    <!-- 树形组件容器 -->
     <div class="tree-container">
       <el-tree
         :key="pageData.forceUpdateKey"
@@ -442,13 +505,13 @@ defineExpose({
         @node-click="method.handleNodeClick"
         @check-change="method.handleCheckChange"
         @check="method.handleCheck"
-        @node-expand="(data, node, component) => expandedKeys.push(data[nodeKey])"
-        @node-collapse="(data, node, component) => expandedKeys = expandedKeys.filter(k => k !== data[nodeKey])"
+        @node-expand="safeHandleNodeExpand"
+        @node-collapse="safeHandleNodeCollapse"
       >
         <template #default="{ node, data }">
           <div class="custom-tree-node">
             <slot name="node-content" :node="node" :data="data">
-              <span class="node-label">{{ node.label }}</span>
+              <span class="node-label">{{ node?.label || '' }}</span>
             </slot>
           </div>
         </template>

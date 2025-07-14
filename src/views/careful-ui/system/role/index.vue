@@ -25,9 +25,12 @@ const initialSearchState = {
 };
 const tabs = ref("表单");
 const skyDrawerRef = ref();
-const permissionRef = ref();
 const formRef = ref();
 const skyExcelRef = ref();
+const menuTreeRef = ref();
+const menuButtonTreeRef = ref();
+const menuColumnTreeRef = ref();
+const deptTreeRef = ref();
 const pageData = reactive({
   pagination: {
     page: 1,
@@ -299,6 +302,7 @@ const method = reactive({
       menu_button_ids: [],
       menu_column_ids: [],
     };
+
   },
   /** 权限管理 */
   async handlePermissions(row: any) {
@@ -306,14 +310,20 @@ const method = reactive({
     await method.handleEcho(row.id);
     await method.handleMenuList();
 
+
+    skyDrawerRef.value.skyOpen();
+
+    menuTreeRef.value?.clearSelected();
+    menuButtonTreeRef.value?.clearSelected();
+    menuColumnTreeRef.value?.clearSelected();
+    deptTreeRef.value?.clearSelected();
+
     // 赋值权限
     pageData.permissionForm.data_range = pageData.form.data_range;
     pageData.permissionForm.menu_ids = pageData.form.menu?.map((item: any) => item.id) ?? [];
     pageData.permissionForm.menu_button_ids = pageData.form.menuButton?.map((item: any) => item.id) ?? [];
     pageData.permissionForm.menu_column_ids = pageData.form.menuColumn?.map((item: any) => item.id) ?? [];
     pageData.permissionForm.dept_ids = pageData.form.dept?.map((item: any) => item.id) ?? [];
-
-    skyDrawerRef.value.skyOpen();
   },
   /** 获取菜单结构 */
   async handleMenuList() {
@@ -349,7 +359,11 @@ const method = reactive({
   /** 选择菜单按钮 */
   handleCheckMenuButton(checkedNodes: any) {
     pageData.permissionForm.menu_button_ids = [];
-    pageData.permissionForm.menu_button_ids = checkedNodes.map((check: any) => check.id);
+    pageData.permissionForm.menu_button_ids = checkedNodes.map((check: any) => {
+      if (check.type === 3) {
+        return check.id
+      }
+    });
   },
   /** 获取菜单列结构 */
   async handleMenuColumnList() {
@@ -367,7 +381,11 @@ const method = reactive({
   /** 选择菜单列 */
   handleCheckMenuColumn(checkedNodes: any) {
     pageData.permissionForm.menu_column_ids = [];
-    pageData.permissionForm.menu_column_ids = checkedNodes.map((check: any) => check.id);
+    pageData.permissionForm.menu_column_ids = checkedNodes.map((check: any) => {
+      if (check.type === 4) {
+        return check.id
+      }
+    });
   },
   /** 选择数据权限 */
   handleChangeDataRange(e: any) {
@@ -608,34 +626,40 @@ onMounted(() => {
 
             <!-- 菜单权限 -->
             <ArtMultiTree
+              ref="menuTreeRef"
               v-if="pageData.active === 0"
               title="菜单权限"
               :loading="pageData.menuLoading"
               :data="pageData.menuList"
               :nodeProps="{label: 'title', children: 'children'}"
               node-key="id"
+              :default-checked-keys="pageData.permissionForm.menu_ids"
               @refresh="method.handleMenuList"
               @check="method.handleCheckMenu"
             />
             <!-- 按钮权限 -->
             <ArtMultiTree
+              ref="menuButtonTreeRef"
               v-if="pageData.active === 1"
               title="按钮权限"
               :loading="pageData.menuButtonLoading"
               :data="pageData.menuButtonList"
               :nodeProps="{label: 'title', children: 'children', disabled: 'disabled'}"
               node-key="id"
+              :default-checked-keys="pageData.permissionForm.menu_button_ids"
               @refresh="method.handleMenuButtonList"
               @check="method.handleCheckMenuButton"
             />
             <!-- 列权限 -->
             <ArtMultiTree
+              ref="menuColumnTreeRef"
               v-if="pageData.active === 2"
               title="列权限"
               :loading="pageData.menuColumnLoading"
               :data="pageData.menuColumnList"
               :nodeProps="{label: 'title', children: 'children', disabled: 'disabled'}"
               node-key="id"
+              :default-checked-keys="pageData.permissionForm.menu_column_ids"
               @refresh="method.handleMenuColumnList"
               @check="method.handleCheckMenuColumn"
             />
@@ -657,12 +681,14 @@ onMounted(() => {
               </el-form-item>
               <!-- 部门选择 -->
               <ArtMultiTree
+                ref="deptTreeRef"
                 v-if="pageData.permissionForm.data_range === 5"
                 title="部门选择"
                 :loading="pageData.deptLoading"
                 :data="pageData.deptList"
                 :nodeProps="{label: 'name', children: 'children'}"
                 node-key="id"
+                :default-checked-keys="pageData.permissionForm.dept_ids"
                 @refresh="method.handleDeptList"
                 @check="method.handleCheckDept"
               />
