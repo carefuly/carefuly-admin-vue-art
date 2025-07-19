@@ -14,6 +14,7 @@ import {useCommon} from '@/composables/useCommon';
 import {useWorktabStore} from '@/store/modules/worktab';
 import {MenuService} from "@/api/careful-ui/system/menu";
 import {asyncRoutes} from "@/router/routes/asyncRoutes";
+import {router} from "@/router";
 
 // 是否已注册动态路由
 const isRouteRegistered = ref(false);
@@ -200,6 +201,7 @@ async function registerAndStoreMenu(router: Router, menuList: AppRouteRecord[], 
  */
 function handleMenuError(error: unknown): void {
   console.error('菜单处理失败:', error);
+  router.push(RoutesAlias.Login);
   useUserStore().logOut();
   throw error instanceof Error ? error : new Error('获取菜单列表失败，请重新登录');
 }

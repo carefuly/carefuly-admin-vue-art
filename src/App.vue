@@ -2,9 +2,9 @@
 import zh from 'element-plus/es/locale/lang/zh-cn';
 import en from 'element-plus/es/locale/lang/en';
 import {useUserStore} from './store/modules/user';
-import {systemUpgrade} from './utils/sys';
-import {setThemeTransitionClass} from './utils/theme/animation';
-import {checkStorageCompatibility} from './utils/storage';
+import {systemUpgrade} from '@/utils';
+import {setThemeTransitionClass} from '@/utils';
+import {checkStorageCompatibility} from '@/utils';
 import {AuthService} from "@/api/careful-ui/auth";
 import {skyMsgWarning} from "@/utils/toast";
 

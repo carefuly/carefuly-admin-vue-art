@@ -1,5 +1,5 @@
-import {defineStore} from 'pinia'
 import {ref} from 'vue'
+import {defineStore} from 'pinia'
 import {TableSizeEnum} from '@/enums/formEnum'
 
 // 表格
@@ -52,12 +52,12 @@ export const useTableStore = defineStore(
       tableSize,
       isZebra,
       isBorder,
+      isFullScreen,
       isHeaderBackground,
       setTableSize,
       setIsZebra,
       setIsBorder,
       setIsHeaderBackground,
-      isFullScreen,
       setIsFullScreen
     }
   },

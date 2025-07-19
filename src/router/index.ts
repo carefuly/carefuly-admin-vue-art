@@ -5,6 +5,9 @@ import {configureNProgress} from './utils/utils';
 import {setupBeforeEachGuard} from './guards/beforeEach';
 import {setupAfterEachGuard} from './guards/afterEach';
 
+// 主页路径，默认使用菜单第一个有效路径，配置后使用此路径
+export const HOME_PAGE_PATH = '';
+
 // 创建路由实例
 export const router = createRouter({
   history: createWebHashHistory(),
