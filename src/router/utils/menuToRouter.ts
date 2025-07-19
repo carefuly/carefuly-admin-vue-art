@@ -1,4 +1,4 @@
-import {AppRouteRecord} from '@/types/router';
+import {AppRouteRecord} from '@/types/router'
 
 /**
  * 将菜单数据转换为路由配置
@@ -7,17 +7,12 @@ import {AppRouteRecord} from '@/types/router';
  * @returns 处理后的路由配置
  */
 export const menuDataToRouter = (route: AppRouteRecord, parentPath = ''): AppRouteRecord => {
-  const {id, name, component, meta, children} = route;
-
   const fullPath = buildRoutePath(route, parentPath)
 
   return {
-    id,
-    name,
+    ...route,
     path: fullPath,
-    component,
-    meta,
-    children: processChildren(children || [], fullPath)
+    children: processChildren(route.children || [], fullPath)
   }
 }
 
@@ -28,13 +23,13 @@ export const menuDataToRouter = (route: AppRouteRecord, parentPath = ''): AppRou
  * @returns 构建后的完整路径
  */
 const buildRoutePath = (route: AppRouteRecord, parentPath: string): string => {
-  if (!route.path) return '';
+  if (!route.path) return ''
 
   // iframe 类型路由直接使用原始路径
-  if (route.meta?.isIframe) return route.path;
+  if (route.meta?.isIframe) return route.path
 
   // 拼接并规范化路径
-  return parentPath ? `${parentPath}/${route.path}`.replace(/\/+/g, '/') : route.path;
+  return parentPath ? `${parentPath}/${route.path}`.replace(/\/+/g, '/') : route.path
 }
 
 /**

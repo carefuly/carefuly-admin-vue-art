@@ -4,9 +4,10 @@
  */
 import type {Router, RouteRecordRaw} from 'vue-router';
 import type {AppRouteRecord} from '@/types/router';
+import {h} from 'vue';
 import {saveIframeRoutes} from './menuToRouter';
 import {RoutesAlias} from '../routesAlias';
-import {h} from 'vue';
+import {useMenuStore} from "@/store/modules/menu";
 
 /**
  * 动态导入 views 目录下所有 .vue 组件
@@ -21,7 +22,9 @@ const modules: Record<string, () => Promise<any>> = import.meta.glob('../../view
  */
 export function registerDynamicRoutes(router: Router, menuList: AppRouteRecord[]): void {
   // 用于局部收集 iframe 类型路由
-  const iframeRoutes: AppRouteRecord[] = [];
+  const iframeRoutes: AppRouteRecord[] = []
+  // 收集路由移除函数
+  const removeRouteFns: (() => void)[] = []
 
   // 检测菜单列表中是否有重复路由
   checkDuplicateRoutes(menuList);
@@ -30,10 +33,16 @@ export function registerDynamicRoutes(router: Router, menuList: AppRouteRecord[]
   menuList.forEach((route) => {
     // 只有还没注册过的路由才进行注册
     if (route.name && !router.hasRoute(route.name)) {
-      const routeConfig = convertRouteComponent(route, iframeRoutes);
-      router.addRoute(routeConfig as RouteRecordRaw);
+      const routeConfig = convertRouteComponent(route, iframeRoutes)
+      // addRoute 返回移除函数，收集起来
+      const removeRouteFn = router.addRoute(routeConfig as RouteRecordRaw)
+      removeRouteFns.push(removeRouteFn)
     }
   });
+
+  // 将移除函数存储到 store 中
+  const menuStore = useMenuStore()
+  menuStore.addRemoveRouteFns(removeRouteFns)
 
   // 保存 iframe 路由
   saveIframeRoutes(iframeRoutes);
@@ -163,7 +172,11 @@ interface ConvertedRoute extends Omit<RouteRecordRaw, 'children'> {
 /**
  * 转换路由组件配置
  */
-function convertRouteComponent(route: any, iframeRoutes: any[], depth = 1): ConvertedRoute {
+function convertRouteComponent(
+  route: any,
+  iframeRoutes: any[],
+  depth = 1
+): ConvertedRoute {
   const {component, children, ...routeConfig} = route;
 
   // 基础路由配置
@@ -213,12 +226,9 @@ function handleLayoutRoute(converted: any, route: any, component: string | undef
 
   converted.children = [
     {
-      id: route.id,
-      path: route.path,
-      name: route.name,
-      component: loadComponent(component as string, String(route.name)),
-      meta: route.meta
-    }
+      ...route,
+      component: loadComponent(component as string, String(route.name))
+    } as ConvertedRoute
   ]
 }
 

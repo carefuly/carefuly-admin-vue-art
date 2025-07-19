@@ -1,4 +1,5 @@
 import type {Router, RouteLocationNormalized, NavigationGuardNext} from 'vue-router';
+import {ref, nextTick} from 'vue'
 import NProgress from "@/utils/http/nprogress";
 import {useSettingStore} from '@/store/modules/setting';
 import {useUserStore} from '@/store/modules/user';
@@ -16,8 +17,14 @@ import {MenuService} from "@/api/careful-ui/system/menu";
 import {asyncRoutes} from "@/router/routes/asyncRoutes";
 import {router} from "@/router";
 
+// 前端权限模式 loading 关闭延时，提升用户体验
+const LOADING_DELAY = 300
+
 // 是否已注册动态路由
-const isRouteRegistered = ref(false);
+const isRouteRegistered = ref(false)
+
+// 跟踪是否需要关闭 loading
+const pendingLoading = ref(false)
 
 /**
  * 路由全局前置守卫
@@ -31,19 +38,48 @@ export function setupBeforeEachGuard(router: Router): void {
       next: NavigationGuardNext
     ) => {
       try {
-        await handleRouteGuard(to, from, next, router);
+        await handleRouteGuard(to, from, next, router)
       } catch (error) {
         console.error('路由守卫处理失败:', error)
         next('/exception/500')
       }
     }
   )
+
+  // 设置后置守卫以关闭 loading 和进度条
+  setupAfterEachGuard(router)
+}
+
+/**
+ * 设置路由全局后置守卫
+ */
+function setupAfterEachGuard(router: Router): void {
+  router.afterEach(() => {
+    // 关闭进度条
+    const settingStore = useSettingStore()
+    if (settingStore.showNprogress) {
+      NProgress.done()
+    }
+
+    // 关闭 loading 效果
+    if (pendingLoading.value) {
+      nextTick(() => {
+        loadingService.hideLoading()
+        pendingLoading.value = false
+      })
+    }
+  })
 }
 
 /**
  * 处理路由守卫逻辑
  */
-async function handleRouteGuard(to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext, router: Router): Promise<void> {
+async function handleRouteGuard(
+  to: RouteLocationNormalized,
+  from: RouteLocationNormalized,
+  next: NavigationGuardNext,
+  router: Router
+): Promise<void> {
   const settingStore = useSettingStore();
   const userStore = useUserStore();
 
@@ -66,6 +102,11 @@ async function handleRouteGuard(to: RouteLocationNormalized, from: RouteLocation
     return
   }
 
+  // 处理根路径跳转到首页
+  if (userStore.isLogin && isRouteRegistered.value && handleRootPathRedirect(to, next)) {
+    return
+  }
+
   // 处理已知的匹配路由
   if (to.matched.length > 0) {
     setWorktab(to);
@@ -75,8 +116,7 @@ async function handleRouteGuard(to: RouteLocationNormalized, from: RouteLocation
   }
 
   // 尝试刷新路由重新注册
-  if (userStore.isLogin) {
-    isRouteRegistered.value = false
+  if (userStore.isLogin && !isRouteRegistered.value) {
     await handleDynamicRoutes(to, router, next)
     return
   }
@@ -88,21 +128,39 @@ async function handleRouteGuard(to: RouteLocationNormalized, from: RouteLocation
 /**
  * 处理登录状态
  */
-async function handleLoginStatus(to: RouteLocationNormalized, userStore: ReturnType<typeof useUserStore>, next: NavigationGuardNext): Promise<boolean> {
+async function handleLoginStatus(
+  to: RouteLocationNormalized,
+  userStore: ReturnType<typeof useUserStore>,
+  next: NavigationGuardNext
+): Promise<boolean> {
   if (!userStore.isLogin && to.path !== RoutesAlias.Login && !to.meta.noLogin) {
-    await userStore.logOut();
-    next(RoutesAlias.Login);
-    return false;
+    userStore.logOut()
+    next(RoutesAlias.Login)
+    return false
   }
-  return true;
+  return true
 }
 
 /**
  * 处理动态路由注册
  */
-async function handleDynamicRoutes(to: RouteLocationNormalized, router: Router, next: NavigationGuardNext): Promise<void> {
+async function handleDynamicRoutes(
+  to: RouteLocationNormalized,
+  router: Router,
+  next: NavigationGuardNext
+): Promise<void> {
   try {
+    // 显示 loading 并标记 pending
+    pendingLoading.value = true
+    loadingService.showLoading()
+
     await getMenuData(router);
+
+    // 处理根路径跳转
+    if (handleRootPathRedirect(to, next)) {
+      return
+    }
+
     next({
       path: to.path,
       query: to.query,
@@ -200,8 +258,8 @@ async function registerAndStoreMenu(router: Router, menuList: AppRouteRecord[], 
  * 处理菜单相关错误
  */
 function handleMenuError(error: unknown): void {
-  console.error('菜单处理失败:', error);
   router.push(RoutesAlias.Login);
+  console.error('菜单处理失败:', error);
   useUserStore().logOut();
   throw error instanceof Error ? error : new Error('获取菜单列表失败，请重新登录');
 }
@@ -266,5 +324,19 @@ export function resetRouterState(): void {
   const menuStore = useMenuStore()
   menuStore.removeAllDynamicRoutes()
   menuStore.setMenuList([])
+}
+
+/**
+ * 处理根路径跳转到首页
+ */
+function handleRootPathRedirect(to: RouteLocationNormalized, next: NavigationGuardNext): boolean {
+  if (to.path === '/') {
+    const {homePath} = useCommon()
+    if (homePath.value) {
+      next({path: homePath.value, replace: true})
+      return true
+    }
+  }
+  return false
 }
 
