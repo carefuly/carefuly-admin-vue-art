@@ -2,7 +2,7 @@
  * 组件相关类型定义
  */
 
-import {Option} from '../common'
+import {Option} from '@/types'
 
 // 搜索组件类型
 export type SearchComponentType =

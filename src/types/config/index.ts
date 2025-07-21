@@ -3,7 +3,7 @@
  */
 
 import {MenuTypeEnum, SystemThemeEnum} from '@/enums/appEnum'
-import {MenuThemeType, SystemThemeTypes} from '@/types/store';
+import {MenuThemeType, SystemThemeTypes} from '@/types/store'
 
 // 主题设置
 export interface ThemeSetting {
@@ -111,7 +111,7 @@ export interface SystemConfig {
     defaultMenuWidth: number
     defaultCustomRadius: string
     defaultTabStyle: string
-  },
+  }
   // 快速入口配置
   fastEnter?: FastEnterConfig
   // 顶部栏功能配置
